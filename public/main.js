@@ -161,21 +161,26 @@ document.addEventListener('DOMContentLoaded', () => {
         while (hasMore) {
             try {
                 const resp = await fetch(`/api/${type}?size=50${cursor ? `&cursor=${cursor}` : ''}`);
+                if (!resp.ok) throw new Error(`API Error: ${resp.status}`);
                 const data = await resp.json();
 
-                if (type === 'cars') allCars.push(...data.items);
-                else allRecipes.push(...data.items);
+                if (data && data.items && Array.isArray(data.items)) {
+                    if (type === 'cars') allCars.push(...data.items);
+                    else allRecipes.push(...data.items);
 
-                if (activeTab === (type === 'cars' ? 'gallery' : 'recipe')) {
-                    appendData(data.items, gridId, false);
+                    if (activeTab === (type === 'cars' ? 'gallery' : 'recipe')) {
+                        appendData(data.items, gridId, false);
+                    }
+                    if (isFirstBatch) { updateDashboardPreview(type); isFirstBatch = false; }
+                    hasMore = data.hasMore;
+                    cursor = data.nextCursor;
+                } else {
+                    hasMore = false;
                 }
-
-                // 첫 배치 로드 후 미리보기 업데이트
-                if (isFirstBatch) { updateDashboardPreview(type); isFirstBatch = false; }
-
-                hasMore = data.hasMore;
-                cursor = data.nextCursor;
-            } catch (e) { hasMore = false; }
+            } catch (e) {
+                console.error(`[Aura] Failed to load ${type}:`, e);
+                hasMore = false;
+            }
         }
         loadingStatus[type] = false;
         setSearchLoading(false);
@@ -186,13 +191,22 @@ document.addEventListener('DOMContentLoaded', () => {
         isFetchingNews = true;
         try {
             const resp = await fetch(`/api/news?start=${cursors.newsStart}`);
+            if (!resp.ok) throw new Error(`News API Error: ${resp.status}`);
             const data = await resp.json();
-            allNews.push(...data.items);
-            appendData(data.items, 'news-grid', true);
-            cursors.newsStart = data.nextStart;
-            hasMoreNews = data.hasMore;
-            updateDashboardPreview('news'); // 뉴스 미리보기 업데이트
-        } catch (e) { hasMoreNews = false; }
+
+            if (data && data.items && Array.isArray(data.items)) {
+                allNews.push(...data.items);
+                appendData(data.items, 'news-grid', true);
+                cursors.newsStart = data.nextStart;
+                hasMoreNews = data.hasMore;
+                updateDashboardPreview('news');
+            } else {
+                hasMoreNews = false;
+            }
+        } catch (e) {
+            console.error('[Aura] Failed to load news:', e);
+            hasMoreNews = false;
+        }
         finally { isFetchingNews = false; }
     }
 
