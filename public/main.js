@@ -51,26 +51,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Canvas Particles ---
     let particles = [];
+    let dpr = window.devicePixelRatio || 1;
+
     function initCanvas() {
         if (!canvas || !ctx) return;
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+
+        // 브라우저 실제 크기 측정 (0인 경우 재시도 유도)
+        const displayWidth = window.innerWidth || document.documentElement.clientWidth;
+        const displayHeight = window.innerHeight || document.documentElement.clientHeight;
+
+        if (displayWidth === 0 || displayHeight === 0) return;
+
+        // 고해상도(DPI) 대응
+        dpr = window.devicePixelRatio || 1;
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
+
+        ctx.scale(dpr, dpr);
         createParticles();
     }
 
     class Particle {
         constructor() {
-            this.x = Math.random() * (canvas?.width || window.innerWidth);
-            this.y = Math.random() * (canvas?.height || window.innerHeight);
+            const w = canvas?.width / dpr || window.innerWidth;
+            const h = canvas?.height / dpr || window.innerHeight;
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
             this.vx = (Math.random() - 0.5) * 0.15;
             this.vy = (Math.random() - 0.5) * 0.15;
             this.radius = Math.random() * 2 + 1.5;
         }
         update() {
             if (!canvas) return;
+            const w = canvas.width / dpr;
+            const h = canvas.height / dpr;
             this.x += this.vx; this.y += this.vy;
-            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
         }
         draw() {
             if (!ctx) return;
@@ -89,7 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function animate() {
         if (!ctx || !canvas) return requestAnimationFrame(animate);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        ctx.clearRect(0, 0, w, h);
 
         particles.forEach((p, index) => {
             p.update();
@@ -112,11 +133,31 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animate);
     }
 
-    // 초기화 시퀀스 강화: DOM 로드 직후 + 약간의 지연 후 재실행
+    // --- 초기화 시퀀스 (Bulletproof) ---
     initCanvas();
     animate();
-    setTimeout(initCanvas, 500); // 렌더링 안정화 대기
-    window.addEventListener('resize', initCanvas);
+
+    // 1. 레이아웃 안정화 후 재실행 (200ms)
+    setTimeout(initCanvas, 200);
+
+    // 2. 끈질긴 감시 루프 (3초간 0.5초마다 캔버스 유효성 체크)
+    let checkCount = 0;
+    const checkInterval = setInterval(() => {
+        if (canvas && (canvas.width === 0 || particles.length === 0)) {
+            initCanvas();
+        }
+        if (++checkCount > 6) clearInterval(checkInterval);
+    }, 500);
+
+    // 3. 브라우저 크기 변화 감지 (ResizeObserver)
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            initCanvas();
+        });
+        ro.observe(document.body);
+    } else {
+        window.addEventListener('resize', initCanvas);
+    }
 
     // --- Authentication ---
     const switchToSignup = document.getElementById('go-signup');
