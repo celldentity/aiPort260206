@@ -41,9 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let allCars = [];
     let allRecipes = [];
     let allNews = [];
+    let allCoding = [];
 
     // 로딩 상태 관리
-    let loadingStatus = { cars: false, recipes: false, news: false };
+    let loadingStatus = { cars: false, recipes: false, news: false, coding: false };
     let cursors = { newsStart: 1 };
     let hasMoreNews = true;
     let isFetchingNews = false;
@@ -148,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 데이터 로딩 전략 (v48 + v53 Preview)
             backgroundFullLoad('cars');
             backgroundFullLoad('recipes');
+            backgroundFullLoad('coding');
             fetchNextNews();
 
             initIntersectionObserver();
@@ -170,11 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Dashboard Preview System (v53) ---
     function updateDashboardPreview(type) {
-        const cardId = type === 'cars' ? 'card-car' : type === 'recipes' ? 'card-recipe' : 'card-news';
+        const cardId = type === 'cars' ? 'card-car' : type === 'recipes' ? 'card-recipe' : type === 'coding' ? 'card-coding' : 'card-news';
         const card = document.getElementById(cardId);
         if (!card) return;
 
-        const data = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : allNews;
+        const data = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : type === 'coding' ? allCoding : allNews;
         const itemsWithImg = data.filter(i => i.imageUrl);
 
         if (itemsWithImg.length > 0) {
@@ -197,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchInput.placeholder = "데이터 로딩 중... ⏳";
             searchInput.disabled = true;
         } else {
-            if (!loadingStatus.cars && !loadingStatus.recipes) {
+            if (!loadingStatus.cars && !loadingStatus.recipes && !loadingStatus.coding) {
                 searchContainer?.classList.remove('loading');
                 searchInput.placeholder = "검색어 입력 후 Enter...";
                 searchInput.disabled = false;
@@ -209,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function backgroundFullLoad(type) {
         loadingStatus[type] = true;
         let hasMore = true, cursor = null, isFirstBatch = true;
-        const gridId = type === 'cars' ? 'gallery-grid' : 'recipe-grid';
+        const gridId = type === 'cars' ? 'gallery-grid' : type === 'recipes' ? 'recipe-grid' : 'coding-grid';
 
         while (hasMore) {
             try {
@@ -219,9 +221,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data && data.items && Array.isArray(data.items)) {
                     if (type === 'cars') allCars.push(...data.items);
-                    else allRecipes.push(...data.items);
+                    else if (type === 'recipes') allRecipes.push(...data.items);
+                    else allCoding.push(...data.items);
 
-                    if (activeTab === (type === 'cars' ? 'gallery' : 'recipe')) {
+                    if (activeTab === (type === 'cars' ? 'gallery' : type === 'recipes' ? 'recipe' : 'coding')) {
                         appendData(data.items, gridId, false);
                     }
                     if (isFirstBatch) { updateDashboardPreview(type); isFirstBatch = false; }
@@ -308,12 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const filteredCars = allCars.filter(i => i.name.toLowerCase().includes(query));
         const filteredRecipes = allRecipes.filter(i => i.name.toLowerCase().includes(query));
         const filteredNews = allNews.filter(i => i.name.toLowerCase().includes(query));
+        const filteredCoding = allCoding.filter(i => i.name.toLowerCase().includes(query));
 
         renderSearchSubGrid('search-grid-cars', 'search-section-cars', filteredCars, false);
         renderSearchSubGrid('search-grid-recipes', 'search-section-recipes', filteredRecipes, false);
         renderSearchSubGrid('search-grid-news', 'search-section-news', filteredNews, true);
+        renderSearchSubGrid('search-grid-coding', 'search-section-coding', filteredCoding, false);
 
-        const total = filteredCars.length + filteredRecipes.length + filteredNews.length;
+        const total = filteredCars.length + filteredRecipes.length + filteredNews.length + filteredCoding.length;
         countDisplay.innerText = `로딩된 데이터에서 총 ${total}개의 항목을 발견했습니다.`;
         noResultsMsg.style.display = total === 0 ? 'block' : 'none';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -334,11 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        const gridId = tabId === 'gallery' ? 'gallery-grid' : tabId === 'recipe' ? 'recipe-grid' : tabId === 'news' ? 'news-grid' : null;
+        const gridId = tabId === 'gallery' ? 'gallery-grid' : tabId === 'recipe' ? 'recipe-grid' : tabId === 'news' ? 'news-grid' : tabId === 'coding' ? 'coding-grid' : null;
         if (gridId) {
             const grid = document.getElementById(gridId);
             if (grid && grid.children.length === 0) {
-                const data = tabId === 'gallery' ? allCars : tabId === 'recipe' ? allRecipes : allNews;
+                const data = tabId === 'gallery' ? allCars : tabId === 'recipe' ? allRecipes : tabId === 'news' ? allNews : allCoding;
                 if (data.length > 0) appendData(data, gridId, tabId === 'news');
             }
         }
@@ -429,20 +434,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBody = document.querySelector('.modal-body');
 
     function openModal(d) {
-        if (d.imageUrl) {
-            document.getElementById('modal-img').src = d.imageUrl;
-            document.getElementById('modal-title').innerText = d.name;
-            document.getElementById('modal-summary').innerText = d.summary;
+        const modalImg = document.getElementById('modal-img');
+        const modalTitle = document.getElementById('modal-title');
+        const modalSummary = document.getElementById('modal-summary');
 
-            modal.classList.add('active');
-            body.style.overflow = 'hidden';
-
-            // 팝업이 활성화된 후 확실하게 최상단으로 스크롤 (setTimeout으로 렌더링 이후 처리)
-            setTimeout(() => {
-                if (modalBody) modalBody.scrollTop = 0;
-                if (modal) modal.scrollTop = 0;
-            }, 10);
+        if (d.youtubeId) {
+            // YouTube Embed 모드
+            modalBody.innerHTML = `
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/${d.youtubeId}?autoplay=1" 
+                            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen></iframe>
+                </div>
+                <div class="modal-text-container">
+                    <h2>${d.name}</h2>
+                    <p>${d.summary}</p>
+                </div>
+            `;
+        } else {
+            // 일반 이미지 모드 (원상복구 대비 초기 구조 유지)
+            modalBody.innerHTML = `
+                <div class="modal-image-container">
+                    <img id="modal-img" src="${d.imageUrl}" alt="${d.name}">
+                </div>
+                <div class="modal-text-container">
+                    <h2 id="modal-title">${d.name}</h2>
+                    <p id="modal-summary">${d.summary}</p>
+                </div>
+            `;
         }
+
+        modal.classList.add('active');
+        body.style.overflow = 'hidden';
+
+        setTimeout(() => {
+            if (modalBody) modalBody.scrollTop = 0;
+            if (modal) modal.scrollTop = 0;
+        }, 10);
     }
 
     // 팝업 바깥(백그라운드) 클릭 시 닫기

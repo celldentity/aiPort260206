@@ -85,6 +85,10 @@
                     <ion-icon name="newspaper-outline"></ion-icon>
                     <span>News</span>
                 </button>
+                <button class="nav-item" data-tab="coding">
+                    <ion-icon name="code-working-outline"></ion-icon>
+                    <span>Coding</span>
+                </button>
                 <button class="nav-item" data-tab="recipe">
                     <ion-icon name="restaurant-outline"></ion-icon>
                     <span>Recipe</span>
@@ -148,6 +152,14 @@
                                 <h3>Car Curation</h3>
                                 <p>프리미엄 자동차 큐레이션</p>
                             </div>
+                            <div id="card-coding" class="glass-card selectable"
+                                onclick="document.querySelector('[data-tab=coding]').click()">
+                                <div class="card-glow"></div>
+                                <div class="card-preview-overlay"></div>
+                                <ion-icon name="code-working-outline"></ion-icon>
+                                <h3>Coding Study</h3>
+                                <p>개발자를 위한 핵심 요약 영상</p>
+                            </div>
                         </div>
                     </div>
 
@@ -181,6 +193,18 @@
                 </header>
                 <div class="masonry-grid" id="news-grid"></div>
                 <div id="news-sentinel" style="height: 50px;"></div>
+            </section>
+
+            <!-- Coding Section -->
+            <section id="coding" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>코딩 비디오 레시피</span></h2>
+                        <h3>노션에서 큐레이션된 고퀄리티 개발 학습 영상</h3>
+                    </div>
+                </header>
+                <div class="masonry-grid" id="coding-grid"></div>
+                <div id="coding-sentinel" style="height: 50px;"></div>
             </section>
 
             <!-- Recipe Section -->

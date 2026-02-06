@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const CAR_DB_ID = process.env.CAR_DB_ID;
 const RECIPE_DB_ID = process.env.RECIPE_DB_ID;
+const CODING_DB_ID = process.env.CODING_DB_ID || '2e8a6753244d80b3b40fd541753022a2';
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
@@ -107,7 +108,7 @@ async function getRobustPageDetails(page) {
         let name = 'Untitled';
         const titleProp = Object.values(page.properties).find(p => p.type === 'title');
         if (titleProp && titleProp.title?.length > 0) name = titleProp.title[0].plain_text;
-        let imageUrl = null; let summary = '';
+        let imageUrl = null; let summary = ''; let youtubeId = null;
         if (page.cover) imageUrl = page.cover.type === 'external' ? page.cover.external.url : page.cover.file.url;
         const blocksResp = await fetch(`https://api.notion.com/v1/blocks/${page.id}/children`, {
             headers: { 'Authorization': `Bearer ${NOTION_TOKEN}`, 'Notion-Version': '2022-06-28' }
@@ -116,20 +117,35 @@ async function getRobustPageDetails(page) {
             const blocks = await blocksResp.json();
             blocks.results.forEach(block => {
                 if (!imageUrl && block.type === 'image') imageUrl = block.image.type === 'external' ? block.image.external.url : block.image.file.url;
-                if (block.type === 'paragraph' && block.paragraph.rich_text.length > 0) summary += block.paragraph.rich_text.map(t => t.plain_text).join('') + ' ';
+                if (block.type === 'video' && block.video.type === 'external') {
+                    const url = block.video.external.url;
+                    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                    if (match) youtubeId = match[1];
+                }
+                if (block.type === 'paragraph' && block.paragraph.rich_text.length > 0) {
+                    const text = block.paragraph.rich_text.map(t => t.plain_text).join('');
+                    summary += text + ' ';
+                    if (!youtubeId) {
+                        const match = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                        if (match) youtubeId = match[1];
+                    }
+                }
             });
         }
-        return imageUrl ? { name, imageUrl, summary: summary.trim(), id: page.id } : null;
+        return (imageUrl || youtubeId) ? { name, imageUrl, summary: summary.trim(), id: page.id, youtubeId } : null;
     } catch (e) { return null; }
 }
 
-async function handleNotionRequest(req, res, dbId) {
+async function handleNotionRequest(req, res, dbId, filter) {
     const { cursor, size = 20 } = req.query;
     try {
+        const queryBody = { page_size: parseInt(size), start_cursor: cursor || undefined };
+        if (filter) queryBody.filter = filter;
+
         const response = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${NOTION_TOKEN}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ page_size: parseInt(size), start_cursor: cursor || undefined })
+            body: JSON.stringify(queryBody)
         });
         const data = await response.json();
         const results = [];
@@ -144,6 +160,10 @@ async function handleNotionRequest(req, res, dbId) {
 
 app.get('/api/cars', (req, res) => handleNotionRequest(req, res, CAR_DB_ID));
 app.get('/api/recipes', (req, res) => handleNotionRequest(req, res, RECIPE_DB_ID));
+app.get('/api/coding', (req, res) => handleNotionRequest(req, res, CODING_DB_ID, {
+    property: 'Category',
+    select: { equals: 'Coding' }
+}));
 
 // Vercel Serverless Function export
 module.exports = app;

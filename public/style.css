@@ -1496,3 +1496,37 @@ main {
         /* Firefox */
     }
 }
+
+/* [v56] Video Container for YouTube Embed */
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    /* 16:9 Ratio */
+    height: 0;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    margin-bottom: 2rem;
+    background: #000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Dashboard Grid Update for 4 items */
+.dashboard-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+@media (max-width: 600px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
