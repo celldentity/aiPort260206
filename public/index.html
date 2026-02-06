@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBC Academy | 수빈쓰</title>
+    <!-- Google Fonts: Inter, Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="initial-state">
+    <!-- Aura Background System -->
+    <div class="aura-container">
+        <canvas id="ai-background"></canvas> <!-- AI 미래 그래픽 전용 캔버스 (로그인 후) -->
+        <div class="aura aura-2"></div>
+        <div class="aura aura-3"></div>
+        <div class="aura-cursor"></div>
+        <div class="aura-overlay"></div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-card glass-card">
+            <div id="auth-forms">
+                <!-- Login Form -->
+                <div id="login-form-container">
+                    <h2><span>MBC AIX 2026</span></h2>
+                    <h3>어서와<br>코딩은 처음이지?</h3>
+                    <form id="login-form">
+                        <div class="input-group">
+                            <input type="text" id="username" placeholder="Username" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="password" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="btn-login">가보자고~ 😊</button>
+                        <p class="auth-switch">계정이 없으신가요? <a href="#" id="go-signup">회원가입</a></p>
+                    </form>
+                </div>
+
+                <!-- Signup Form (Hidden) -->
+                <div id="signup-form-container" style="display: none;">
+                    <h2><span>Join MBC AIX</span></h2>
+                    <h3>새로운 시작을<br>함께해요</h3>
+                    <form id="signup-form">
+                        <div class="input-group">
+                            <input type="text" id="reg-name" placeholder="Full Name" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="reg-username" placeholder="Username (영문+숫자, 8자 이상)" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="reg-email" placeholder="Email Address" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="reg-password" placeholder="Password" required>
+                        </div>
+                        <button type="submit" id="signup-submit-btn" class="btn-login">Create Account</button>
+                        <p class="auth-switch">이미 계정이 있나요? <a href="#" id="go-login">로그인</a></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Content (Hidden Initially) -->
+    <div id="app-container" style="display: none;">
+        <!-- Navigation -->
+        <nav class="glass-nav">
+            <div class="nav-links">
+                <button class="nav-item active" data-tab="home">
+                    <ion-icon name="home-outline"></ion-icon>
+                    <span>Home</span>
+                </button>
+                <button class="nav-item" data-tab="news">
+                    <ion-icon name="newspaper-outline"></ion-icon>
+                    <span>News</span>
+                </button>
+                <button class="nav-item" data-tab="recipe">
+                    <ion-icon name="restaurant-outline"></ion-icon>
+                    <span>Recipe</span>
+                </button>
+                <button class="nav-item" data-tab="gallery">
+                    <ion-icon name="car-sport-outline"></ion-icon>
+                    <span>Car Curation</span>
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    <span>Settings</span>
+                </button>
+            </div>
+            <div class="nav-search">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="car-search" placeholder="검색어 입력 후 Enter...">
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="content">
+            <!-- Home Section -->
+            <section id="home" class="tab-content active">
+                <div class="home-layout">
+                    <!-- Left: Hero & Notice -->
+                    <div class="home-main">
+                        <header class="hero">
+                            <h2 class="reveal-text">대보정보통신<br><span class="gradient-text">AIX 2026 Gallery</span></h2>
+                            <p class="subtitle">맨땅에 헤딩하는 AI시대 새싹 코더를 위한 공간</p>
+
+                            <!-- AI Service Notice Badge -->
+                            <div class="ai-notice-box glass-card">
+                                <ion-icon name="sparkles-outline"></ion-icon>
+                                <span>본 서비스의 뉴스, 레시피, 카 큐레이션은 <strong>AI가 직접 이미지를 생성하고 본문 내용을 선별</strong>하였습니다.<br>
+                                    컨텐츠가 로딩되는데 시간이 조금 걸려요 검색창의 로딩중이 끝나면 원활히 이용할 수 있어요! 🤷‍♂️</span>
+                            </div>
+                        </header>
+
+                        <div class="dashboard-grid">
+                            <div id="card-news" class="glass-card selectable"
+                                onclick="document.querySelector('[data-tab=news]').click()">
+                                <div class="card-glow"></div>
+                                <div class="card-preview-overlay"></div>
+                                <ion-icon name="newspaper-outline"></ion-icon>
+                                <h3>Tech News</h3>
+                                <p>AI가 수집하는 최신 기술 동향</p>
+                            </div>
+                            <div id="card-recipe" class="glass-card selectable"
+                                onclick="document.querySelector('[data-tab=recipe]').click()">
+                                <div class="card-glow"></div>
+                                <div class="card-preview-overlay"></div>
+                                <ion-icon name="restaurant-outline"></ion-icon>
+                                <h3>AI Recipe</h3>
+                                <p>매일 새롭게 생성되는 요리 정보</p>
+                            </div>
+                            <div id="card-car" class="glass-card selectable"
+                                onclick="document.querySelector('[data-tab=gallery]').click()">
+                                <div class="card-glow"></div>
+                                <div class="card-preview-overlay"></div>
+                                <ion-icon name="car-sport-outline"></ion-icon>
+                                <h3>Car Curation</h3>
+                                <p>프리미엄 자동차 큐레이션</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Guestbook Sidebar -->
+                    <aside class="home-sidebar">
+                        <div class="guestbook-container glass-card">
+                            <div class="guestbook-header">
+                                <ion-icon name="chatbubbles-outline"></ion-icon>
+                                <h3>아무말대잔치</h3>
+                            </div>
+                            <div class="guestbook-list" id="guestbook-list">
+                                <!-- 방명록 메시지들이 여기에 로드됩니다 -->
+                            </div>
+                            <div class="guestbook-input-area">
+                                <textarea id="guestbook-input" placeholder="인삿말을 남겨주세요 (최대 200자)"
+                                    maxlength="200"></textarea>
+                                <button id="guestbook-submit">기록하기</button>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- News Section -->
+            <section id="news" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>최신 IT 뉴스</span></h2>
+                        <h3>네이버 AI가 실시간으로 수집하는 최신 기술 동향</h3>
+                    </div>
+                </header>
+                <div class="masonry-grid" id="news-grid"></div>
+                <div id="news-sentinel" style="height: 50px;"></div>
+            </section>
+
+            <!-- Recipe Section -->
+            <section id="recipe" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>라이프스타일 레시피</span></h2>
+                        <h3>하루에 한 번 AI가 자동으로 만드는 맛있는 레시피</h3>
+                    </div>
+                    <div class="gallery-filters">
+                        <div class="custom-dropdown" id="recipe-sort-dropdown">
+                            <button class="dropdown-trigger">
+                                <span id="current-recipe-sort">이름 높은순</span>
+                                <ion-icon name="chevron-down-outline"></ion-icon>
+                            </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item active" data-sort="desc">이름 높은순</div>
+                                <div class="dropdown-item" data-sort="asc">이름 낮은순</div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <div class="masonry-grid" id="recipe-grid">
+                    <!-- 레시피 카드가 여기에 무한 스크롤로 추가됩니다 -->
+                </div>
+                <div id="recipe-sentinel" style="height: 50px;"></div>
+            </section>
+
+            <!-- Gallery Section -->
+            <section id="gallery" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>자동차 큐레이션</span></h2>
+                        <h3>100% AI 큐레이터가 선정한 역사적 차량 큐레이션</h3>
+                    </div>
+                    <div class="gallery-filters">
+                        <div class="custom-dropdown" id="sort-dropdown">
+                            <button class="dropdown-trigger">
+                                <span id="current-sort">이름 높은순</span>
+                                <ion-icon name="chevron-down-outline"></ion-icon>
+                            </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item active" data-sort="desc">이름 높은순</div>
+                                <div class="dropdown-item" data-sort="asc">이름 낮은순</div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <div class="masonry-grid" id="gallery-grid"></div>
+                <div id="gallery-sentinel" style="height: 50px;"></div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>개인 설정</span></h2>
+                        <h3>가끔 정보를 수정하고 싶은 그런 날이 있죠😊</h3>
+                    </div>
+                </header>
+                <div class="settings-container glass-card">
+                    <!-- 현재 사용자 정보 시각화 -->
+                    <div class="current-user-info">
+                        <div class="info-pill">
+                            <span class="label">ID</span>
+                            <span id="info-username" class="value">---</span>
+                        </div>
+                        <div class="info-pill">
+                            <span class="label">NAME</span>
+                            <span id="info-name" class="value">---</span>
+                        </div>
+                        <div class="info-pill">
+                            <span class="label">EMAIL</span>
+                            <span id="info-email" class="value">---</span>
+                        </div>
+                    </div>
+
+                    <form id="profile-form" class="settings-form">
+                        <div class="settings-group">
+                            <label>이름 변경</label>
+                            <input type="text" id="update-name" placeholder="새로운 이름을 입력하세요">
+                        </div>
+                        <div class="settings-group">
+                            <label>이메일 변경</label>
+                            <input type="email" id="update-email" placeholder="새로운 이메일을 입력하세요">
+                        </div>
+                        <div class="settings-group">
+                            <label>새 비밀번호</label>
+                            <input type="password" id="update-password" placeholder="변경할 비밀번호를 입력하세요">
+                        </div>
+                        <div class="settings-group">
+                            <label>비밀번호 확인</label>
+                            <input type="password" id="confirm-password" placeholder="비밀번호를 한 번 더 입력하세요">
+                        </div>
+                        <div class="settings-actions">
+                            <button type="submit" class="btn-login">정보 업데이트</button>
+                            <button type="button" class="btn-logout" id="logout-btn">로그아웃</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Search Results Section (v45 NEW) -->
+            <section id="search-results" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2 id="search-query-display"><span>검색 결과</span></h2>
+                        <h3 id="search-count-display">검색어와 맞는 항목을 찾았어요!😃</h3>
+                    </div>
+                </header>
+
+                <div id="search-results-container">
+                    <div class="search-sub-section" id="search-section-cars">
+                        <h4 class="search-sub-title">CAR CURATION</h4>
+                        <div class="masonry-grid" id="search-grid-cars"></div>
+                    </div>
+
+                    <div class="search-sub-section" id="search-section-recipes">
+                        <h4 class="search-sub-title">RECIPES</h4>
+                        <div class="masonry-grid" id="search-grid-recipes"></div>
+                    </div>
+
+                    <div class="search-sub-section" id="search-section-news">
+                        <h4 class="search-sub-title">LATEST NEWS</h4>
+                        <div class="masonry-grid" id="search-grid-news"></div>
+                    </div>
+
+                    <div id="search-no-results" style="display: none; text-align: center; padding: 10rem 0;">
+                        <ion-icon name="search-outline"
+                            style="font-size: 4rem; opacity: 0.2; margin-bottom: 2rem;"></ion-icon>
+                        <p style="font-size: 1.2rem; opacity: 0.5;">검색 결과가 없습니다. 다른 검색어를 입력해 보세요.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-body">
+                <div class="modal-image-container">
+                    <img id="modal-img" src="" alt="Vehicle Image">
+                </div>
+                <div class="modal-text-container">
+                    <h2 id="modal-title">Vehicle Name</h2>
+                    <p id="modal-summary">Vehicle summary goes here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Search Modal (v54 New) -->
+    <div id="search-modal" class="modal-overlay">
+        <div class="modal-content glass-card search-modal-content">
+            <div class="search-modal-header">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="mobile-search-input" placeholder="무엇을 찾고 싶으신가요?">
+            </div>
+            <p class="search-tip">입력 후 Enter를 눌러 검색하세요</p>
+        </div>
+    </div>
+
+    <script src="main.js" defer></script>
+</body>
+
+</html>
