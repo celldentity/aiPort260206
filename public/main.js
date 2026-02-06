@@ -56,21 +56,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function initCanvas() {
         if (!canvas || !ctx) return;
 
-        // 브라우저 실제 크기 측정 (0인 경우 재시도 유도)
         const displayWidth = window.innerWidth || document.documentElement.clientWidth;
         const displayHeight = window.innerHeight || document.documentElement.clientHeight;
 
         if (displayWidth === 0 || displayHeight === 0) return;
 
-        // 고해상도(DPI) 대응
         dpr = window.devicePixelRatio || 1;
         canvas.width = displayWidth * dpr;
         canvas.height = displayHeight * dpr;
         canvas.style.width = displayWidth + 'px';
         canvas.style.height = displayHeight + 'px';
 
-        ctx.scale(dpr, dpr);
-        createParticles();
+        // 중요: 누적 스케일 방지를 위해 변환 행렬 초기화 후 dpr 적용
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        if (particles.length === 0) createParticles();
     }
 
     class Particle {
