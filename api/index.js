@@ -161,9 +161,18 @@ async function handleNotionRequest(req, res, dbId, filter) {
 app.get('/api/cars', (req, res) => handleNotionRequest(req, res, CAR_DB_ID));
 app.get('/api/recipes', (req, res) => handleNotionRequest(req, res, RECIPE_DB_ID));
 app.get('/api/coding', (req, res) => handleNotionRequest(req, res, CODING_DB_ID, {
-    property: 'Category',
-    select: { equals: 'Coding' }
+    or: [
+        {
+            property: 'Category',
+            select: { equals: 'Coding' }
+        },
+        {
+            property: 'Category',
+            select: { equals: 'AI' }
+        }
+    ]
 }));
+
 
 // Vercel Serverless Function export
 module.exports = app;
