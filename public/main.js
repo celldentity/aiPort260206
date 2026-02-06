@@ -67,10 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.style.width = displayWidth + 'px';
         canvas.style.height = displayHeight + 'px';
 
+        // 매 초기화마다 파티클을 새로 생성하여 영역에 맞춤
+        createParticles();
+
         // 중요: 누적 스케일 방지를 위해 변환 행렬 초기화 후 dpr 적용
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        if (particles.length === 0) createParticles();
     }
 
     class Particle {
@@ -108,9 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function animate() {
         if (!ctx || !canvas) return requestAnimationFrame(animate);
+
         const w = canvas.width / dpr;
         const h = canvas.height / dpr;
-        ctx.clearRect(0, 0, w, h);
+
+        // 매 프레임 변환 행렬 리셋 후 dpr 적용 (가장 안전한 방법)
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w + 10, h + 10);
 
         particles.forEach((p, index) => {
             p.update();
