@@ -135,69 +135,15 @@
                         </div>
 
 
+
                         <div class="insights-market-card glass-card">
                             <div class="insights-header">
                                 <ion-icon name="trending-up-outline"></ion-icon>
                                 <h4>AI 시장 현황 (실시간)</h4>
                             </div>
-                            <!-- TradingView Widget BEGIN -->
-                            <div class="tradingview-widget-container">
-                                <div class="tradingview-widget-container__widget"></div>
-                                <script type="text/javascript"
-                                    src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
-                                    async>
-                                        {
-                                            "symbols": [
-                                                {
-                                                    "proName": "NASDAQ:NVDA",
-                                                    "title": "NVIDIA"
-                                                },
-                                                {
-                                                    "proName": "NASDAQ:MSFT",
-                                                    "title": "Microsoft"
-                                                },
-                                                {
-                                                    "proName": "NASDAQ:GOOGL",
-                                                    "title": "Alphabet"
-                                                },
-                                                {
-                                                    "proName": "NASDAQ:AAPL",
-                                                    "title": "Apple"
-                                                },
-                                                {
-                                                    "proName": "NASDAQ:TSLA",
-                                                    "title": "Tesla"
-                                                },
-                                                {
-                                                    "proName": "KRX:005930",
-                                                    "title": "삼성전자"
-                                                },
-                                                {
-                                                    "proName": "KRX:000660",
-                                                    "title": "SK하이닉스"
-                                                },
-                                                {
-                                                    "proName": "KRX:035420",
-                                                    "title": "NAVER"
-                                                },
-                                                {
-                                                    "proName": "KRX:035720",
-                                                    "title": "카카오"
-                                                },
-                                                {
-                                                    "proName": "KRX:005380",
-                                                    "title": "현대차"
-                                                }
-                                            ],
-                                                "showSymbolLogo": true,
-                                                    "colorTheme": "dark",
-                                                        "isTransparent": true,
-                                                            "displayMode": "adaptive",
-                                                                "locale": "kr"
-                                        }
-                                    </script>
+                            <div id="market-list" class="market-ticker scrollable-market">
+                                <p class="loading-msg">실시간 데이터 로딩 중... 📈</p>
                             </div>
-                            <!-- TradingView Widget END -->
                         </div>
                     </aside>
 

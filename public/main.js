@@ -611,11 +611,81 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
 
-    // --- AI Insights System (v61 Updated - TradingView Widget) ---
+    // --- AI Insights System (v62 - Finnhub Real-time API) ---
     async function loadAIInsights() {
+        const marketList = document.getElementById('market-list');
         const papersList = document.getElementById('papers-list');
 
-        // Market data now handled by TradingView widget - no fetching needed
+        // Finnhub Free API Key (60 calls/min)
+        const FINNHUB_API_KEY = 'ctbsqtpr01qr6kpbhh4gctbsqtpr01qr6kpbhh50';
+
+        // Stock symbols to track
+        const stocks = [
+            { symbol: 'NVDA', name: 'NVIDIA', region: 'US' },
+            { symbol: 'MSFT', name: 'Microsoft', region: 'US' },
+            { symbol: 'GOOGL', name: 'Alphabet', region: 'US' },
+            { symbol: 'AAPL', name: 'Apple', region: 'US' },
+            { symbol: 'TSLA', name: 'Tesla', region: 'US' }
+        ];
+
+        // Load real-time stock data
+        if (marketList) {
+            try {
+                const stockPromises = stocks.map(async (stock) => {
+                    try {
+                        const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${stock.symbol}&token=${FINNHUB_API_KEY}`);
+                        const data = await response.json();
+
+                        // Use current price if available, otherwise use previous close
+                        const price = data.c || data.pc || 0;
+                        const change = data.d || 0;
+                        const percent = data.dp || 0;
+
+                        return {
+                            ...stock,
+                            price: price,
+                            change: change,
+                            percent: percent
+                        };
+                    } catch (e) {
+                        console.error(`Failed to load ${stock.symbol}:`, e);
+                        return null;
+                    }
+                });
+
+                const stockData = (await Promise.all(stockPromises)).filter(s => s !== null);
+
+                if (stockData.length > 0) {
+                    const renderStock = (s) => `
+                        <div class="market-item">
+                            <div class="market-info-left">
+                                <span class="market-symbol">${s.symbol}</span>
+                                <span class="market-name">${s.name}</span>
+                            </div>
+                            <div class="market-info-right">
+                                <div class="market-price">$${s.price.toFixed(2)}</div>
+                                <div class="market-change ${s.change >= 0 ? 'up' : 'down'}">
+                                    ${s.change >= 0 ? '▲' : '▼'} ${Math.abs(s.percent).toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    marketList.innerHTML = `
+                        <div class="market-region-header">US Tech Markets (실시간)</div>
+                        ${stockData.map(renderStock).join('')}
+                        <p style="font-size:0.7rem; opacity:0.5; text-align:center; margin-top:1rem;">
+                            ${new Date().toLocaleTimeString('ko-KR')} 업데이트
+                        </p>
+                    `;
+                } else {
+                    marketList.innerHTML = '<p class="loading-msg">데이터를 불러올 수 없습니다 😢</p>';
+                }
+            } catch (e) {
+                console.error('Market load failed', e);
+                marketList.innerHTML = '<p class="loading-msg">시장 데이터 로딩 실패</p>';
+            }
+        }
 
         // Load ArXiv Papers
         try {
