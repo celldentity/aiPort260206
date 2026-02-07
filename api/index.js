@@ -176,12 +176,20 @@ app.get('/api/coding', (req, res) => handleNotionRequest(req, res, CODING_DB_ID,
 /**
  * 4. AI Insights (ArXiv & Market)
  */
+async function translateToKorean(text) {
+    try {
+        const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`);
+        const data = await response.json();
+        return data[0][0][0];
+    } catch (e) { return text; }
+}
+
 app.get('/api/insights/papers', async (req, res) => {
     try {
         const response = await fetch('https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=5');
         const xml = await response.text();
 
-        const entries = [];
+        const rawEntries = [];
         const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
         let match;
 
@@ -193,10 +201,17 @@ app.get('/api/insights/papers', async (req, res) => {
             const published = (content.match(/<published>([\s\S]*?)<\/published>/) || [])[1];
 
             if (title && link) {
-                entries.push({ title, summary: summary ? summary.substring(0, 200) + '...' : '', link, published });
+                rawEntries.push({ title, summary: summary ? summary.substring(0, 200) + '...' : '', link, published });
             }
         }
-        res.json(entries);
+
+        // Translate titles to Korean
+        const processedEntries = await Promise.all(rawEntries.map(async (entry) => {
+            const translatedTitle = await translateToKorean(entry.title);
+            return { ...entry, originalTitle: entry.title, title: translatedTitle };
+        }));
+
+        res.json(processedEntries);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
