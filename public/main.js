@@ -386,18 +386,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tab Content Switching
         const sections = {
-            'home': 'home-container',
-            'news': 'news-section',
-            'coding': 'coding-section',
-            'recipe': 'recipe-section',
-            'gallery': 'car-section',
+            'home': 'home',
+            'news': 'news',
+            'coding': 'coding',
+            'recipe': 'recipe',
+            'gallery': 'gallery',
             'minigame': 'game-section',
-            'settings': 'settings-section'
+            'settings': 'settings',
+            'search-results': 'search-results'
         };
 
         Object.values(sections).forEach(sid => {
             const el = document.getElementById(sid);
-            if (el) el.style.display = 'none';
+            if (el) {
+                el.style.display = 'none';
+                el.classList.remove('active');
+            }
         });
 
         const activeSectionId = sections[tabId];
@@ -800,5 +804,16 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('keyup', e => keys[e.key] = false);
     startStrikerBtn?.addEventListener('click', initStriker);
 
-});
+    // Global cursor tracking
+    document.addEventListener('mousemove', e => {
+        if (auraCursor) {
+            auraCursor.style.left = `${e.clientX}px`;
+            auraCursor.style.top = `${e.clientY}px`;
+        }
+        document.querySelectorAll('.gallery-item').forEach(c => {
+            const r = c.getBoundingClientRect();
+            c.style.setProperty('--mouseX', `${e.clientX - r.left}px`);
+            c.style.setProperty('--mouseY', `${e.clientY - r.top}px`);
+        });
+    });
 });
