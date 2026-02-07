@@ -380,31 +380,31 @@
                 </header>
 
                 <div class="game-view-container glass-card">
-                    <div id="striker-landing" class="game-ui-overlay">
-                        <div class="striker-intro">
-                            <h1>AURA STRIKER</h1>
-                            <p>화살표 키로 이동, Space 키로 발사!</p>
-                            <button id="btn-striker-start" class="btn-striker">MISSION START</button>
+                    <div id="tetris-landing" class="game-ui-overlay">
+                        <div class="tetris-intro">
+                            <h1>🎮 TETRIS</h1>
+                            <p>← → : 이동 | ↑ : 회전 | ↓ : 빠르게 | Space : 즉시 낙하</p>
+                            <button id="btn-tetris-start" class="btn-game">START GAME</button>
                         </div>
                     </div>
 
-                    <div id="striker-hud" class="game-hud" style="display:none;">
+                    <div id="tetris-hud" class="game-hud" style="display:none;">
                         <div class="hud-top">
-                            <div class="hud-stat">STAGE <span id="striker-stage">1</span></div>
-                            <div class="hud-stat">SCORE <span id="striker-score">0</span></div>
+                            <div class="hud-stat">SCORE <span id="tetris-score">0</span></div>
+                            <div class="hud-stat">LEVEL <span id="tetris-level">1</span></div>
+                            <div class="hud-stat">LINES <span id="tetris-lines">0</span></div>
                         </div>
-                        <div class="hud-bottom">
-                            <div class="hp-bar-container">
-                                <div id="striker-hp-fill" class="hp-fill"></div>
-                            </div>
+                        <div class="hud-next">
+                            <p style="font-size:0.8rem; opacity:0.7; margin-bottom:0.5rem;">NEXT</p>
+                            <canvas id="next-canvas" width="80" height="80"></canvas>
                         </div>
                     </div>
 
-                    <div id="striker-message" class="game-message-overlay" style="display:none;">
-                        <h2 id="striker-msg-text">STAGE CLEAR</h2>
+                    <div id="tetris-message" class="game-message-overlay" style="display:none;">
+                        <h2 id="tetris-msg-text">PAUSED</h2>
                     </div>
 
-                    <canvas id="striker-canvas"></canvas>
+                    <canvas id="tetris-canvas"></canvas>
                 </div>
             </section>
         </main>

@@ -611,84 +611,101 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
 
-    // --- AI Insights System (v63 - FMP API with Fallback) ---
+    // --- AI Insights System (v65 - Auto-refresh + Korean Stocks) ---
+    let stockRefreshInterval = null;
+
     async function loadAIInsights() {
         const marketList = document.getElementById('market-list');
         const papersList = document.getElementById('papers-list');
 
-        // Stock symbols with REAL fallback data (Feb 7, 2026)
-        const stocks = [
-            { symbol: 'NVDA', name: 'NVIDIA', fallback: { price: 185.40, change: 13.77, percent: 8.01 } },
-            { symbol: 'MSFT', name: 'Microsoft', fallback: { price: 401.14, change: -2.45, percent: -0.61 } },
-            { symbol: 'GOOGL', name: 'Alphabet', fallback: { price: 322.86, change: 4.55, percent: 1.43 } },
-            { symbol: 'AAPL', name: 'Apple', fallback: { price: 278.12, change: 2.21, percent: 0.80 } },
-            { symbol: 'TSLA', name: 'Tesla', fallback: { price: 411.11, change: -8.90, percent: -2.12 } }
+        // US + Korean stock symbols with REAL fallback data (Feb 6-7, 2026)
+        const usStocks = [
+            { symbol: 'NVDA', name: 'NVIDIA', region: 'US', fallback: { price: 185.40, change: 13.77, percent: 8.01 } },
+            { symbol: 'MSFT', name: 'Microsoft', region: 'US', fallback: { price: 401.14, change: -2.45, percent: -0.61 } },
+            { symbol: 'GOOGL', name: 'Alphabet', region: 'US', fallback: { price: 322.86, change: 4.55, percent: 1.43 } },
+            { symbol: 'AAPL', name: 'Apple', region: 'US', fallback: { price: 278.12, change: 2.21, percent: 0.80 } },
+            { symbol: 'TSLA', name: 'Tesla', region: 'US', fallback: { price: 411.11, change: -8.90, percent: -2.12 } }
+        ];
+
+        const krStocks = [
+            { symbol: '005930.KS', name: '삼성전자', region: 'KR', fallback: { price: 112400, change: 1200, percent: 1.08 } },
+            { symbol: '000660.KS', name: 'SK하이닉스', region: 'KR', fallback: { price: 839000, change: 15000, percent: 1.82 } },
+            { symbol: '035420.KS', name: 'NAVER', region: 'KR', fallback: { price: 249000, change: -3000, percent: -1.19 } },
+            { symbol: '035720.KS', name: '카카오', region: 'KR', fallback: { price: 56200, change: 800, percent: 1.44 } },
+            { symbol: '005380.KS', name: '현대차', region: 'KR', fallback: { price: 467500, change: 5500, percent: 1.19 } }
         ];
 
         // Load stock data with fallback
         if (marketList) {
             try {
-                const stockPromises = stocks.map(async (stock) => {
-                    try {
-                        // Try FMP API (demo key works for limited requests)
-                        const response = await fetch(`https://financialmodelingprep.com/api/v3/quote/${stock.symbol}?apikey=demo`, { timeout: 3000 });
-                        const data = await response.json();
+                const loadStocks = async (stocks) => {
+                    const stockPromises = stocks.map(async (stock) => {
+                        try {
+                            // Try FMP API (demo key works for limited requests)
+                            const response = await fetch(`https://financialmodelingprep.com/api/v3/quote/${stock.symbol}?apikey=demo`, { timeout: 3000 });
+                            const data = await response.json();
 
-                        if (data && data.length > 0 && data[0].price > 0) {
-                            const quote = data[0];
+                            if (data && data.length > 0 && data[0].price > 0) {
+                                const quote = data[0];
+                                return {
+                                    symbol: stock.symbol,
+                                    name: stock.name,
+                                    region: stock.region,
+                                    price: quote.price,
+                                    change: quote.change || 0,
+                                    percent: quote.changesPercentage || 0,
+                                    isLive: true
+                                };
+                            }
+                            throw new Error('Invalid API response');
+                        } catch (e) {
+                            // Use fallback data
                             return {
                                 symbol: stock.symbol,
                                 name: stock.name,
-                                price: quote.price,
-                                change: quote.change || 0,
-                                percent: quote.changesPercentage || 0,
-                                isLive: true
+                                region: stock.region,
+                                price: stock.fallback.price,
+                                change: stock.fallback.change,
+                                percent: stock.fallback.percent,
+                                isLive: false
                             };
                         }
-                        throw new Error('Invalid API response');
-                    } catch (e) {
-                        // Use fallback data
-                        console.log(`Using fallback for ${stock.symbol}`);
-                        return {
-                            symbol: stock.symbol,
-                            name: stock.name,
-                            price: stock.fallback.price,
-                            change: stock.fallback.change,
-                            percent: stock.fallback.percent,
-                            isLive: false
-                        };
-                    }
-                });
+                    });
+                    return await Promise.all(stockPromises);
+                };
 
-                const stockData = await Promise.all(stockPromises);
-                const hasLiveData = stockData.some(s => s.isLive);
+                const [usData, krData] = await Promise.all([loadStocks(usStocks), loadStocks(krStocks)]);
+                const hasLiveData = [...usData, ...krData].some(s => s.isLive);
 
-                if (stockData.length > 0) {
-                    const renderStock = (s) => `
+                const renderStock = (s) => {
+                    const priceStr = s.region === 'KR'
+                        ? `₩${s.price.toLocaleString('ko-KR')}`
+                        : `$${s.price.toFixed(2)}`;
+                    return `
                         <div class="market-item">
                             <div class="market-info-left">
-                                <span class="market-symbol">${s.symbol}</span>
-                                <span class="market-name">${s.name}</span>
+                                <span class="market-symbol">${s.name}</span>
+                                <span class="market-name">${s.symbol.replace('.KS', '')}</span>
                             </div>
                             <div class="market-info-right">
-                                <div class="market-price">$${s.price.toFixed(2)}</div>
+                                <div class="market-price">${priceStr}</div>
                                 <div class="market-change ${s.change >= 0 ? 'up' : 'down'}">
                                     ${s.change >= 0 ? '▲' : '▼'} ${Math.abs(s.percent).toFixed(2)}%
                                 </div>
                             </div>
                         </div>
                     `;
+                };
 
-                    marketList.innerHTML = `
-                        <div class="market-region-header">US Tech Markets ${hasLiveData ? '(실시간)' : '(참고용)'}</div>
-                        ${stockData.map(renderStock).join('')}
-                        <p style="font-size:0.7rem; opacity:0.5; text-align:center; margin-top:1rem;">
-                            ${new Date().toLocaleTimeString('ko-KR')} 업데이트 ${hasLiveData ? '' : '(API 제한)'}
-                        </p>
-                    `;
-                } else {
-                    marketList.innerHTML = '<p class="loading-msg">데이터를 불러올 수 없습니다 😢</p>';
-                }
+                marketList.innerHTML = `
+                    <div class="market-region-header">🇺🇸 US Tech Markets ${hasLiveData ? '(실시간)' : '(참고용)'}</div>
+                    ${usData.map(renderStock).join('')}
+                    <div class="market-region-header" style="margin-top:1rem;">🇰🇷 한국 주요 종목 ${hasLiveData ? '(실시간)' : '(참고용)'}</div>
+                    ${krData.map(renderStock).join('')}
+                    <p style="font-size:0.7rem; opacity:0.5; text-align:center; margin-top:1rem;">
+                        ${new Date().toLocaleTimeString('ko-KR')} 업데이트 ${hasLiveData ? '' : '(API 제한)'}
+                    </p>
+                `;
             } catch (e) {
                 console.error('Market load failed', e);
                 marketList.innerHTML = '<p class="loading-msg">시장 데이터 로딩 실패</p>';
@@ -713,360 +730,388 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- [v64] Aura Striker: Enhanced Graphics Edition ---
-    const strikerCanvas = document.getElementById('striker-canvas');
-    const sCtx = strikerCanvas?.getContext('2d');
-    const startStrikerBtn = document.getElementById('btn-striker-start');
-    const strikerLanding = document.getElementById('striker-landing');
-    const strikerHUD = document.getElementById('striker-hud');
-    const strikerMsg = document.getElementById('striker-message');
-    const strikerMsgText = document.getElementById('striker-msg-text');
-    const strikerScoreEl = document.getElementById('striker-score');
-    const strikerStageEl = document.getElementById('striker-stage');
-    const strikerHPFill = document.getElementById('striker-hp-fill');
+    // Auto-refresh stock data every 30 seconds
+    function startStockRefresh() {
+        if (stockRefreshInterval) clearInterval(stockRefreshInterval);
+        stockRefreshInterval = setInterval(loadAIInsights, 30000); // 30 seconds
+    }
+
+    // --- [v66] Tetris Game ---
+    const tetrisCanvas = document.getElementById('tetris-canvas');
+    const tetrisCtx = tetrisCanvas?.getContext('2d');
+    const nextCanvas = document.getElementById('next-canvas');
+    const nextCtx = nextCanvas?.getContext('2d');
+    const startTetrisBtn = document.getElementById('btn-tetris-start');
+    const tetrisLanding = document.getElementById('tetris-landing');
+    const tetrisHUD = document.getElementById('tetris-hud');
+    const tetrisMsg = document.getElementById('tetris-message');
+    const tetrisMsgText = document.getElementById('tetris-msg-text');
+    const tetrisScoreEl = document.getElementById('tetris-score');
+    const tetrisLevelEl = document.getElementById('tetris-level');
+    const tetrisLinesEl = document.getElementById('tetris-lines');
+
+    // Game constants
+    const COLS = 10, ROWS = 20, BLOCK_SIZE = 30;
+    const COLORS = [
+        ['#ff006e', '#8338ec'], // I - Pink to Purple
+        ['#ffbe0b', '#fb5607'], // O - Yellow to Orange
+        ['#3a86ff', '#8338ec'], // T - Blue to Purple
+        ['#06ffa5', '#00d9ff'], // S - Cyan to Blue
+        ['#ff006e', '#ff4d6d'], // Z - Pink to Red
+        ['#ffbe0b', '#ff006e'], // J - Yellow to Pink
+        ['#06ffa5', '#3a86ff']  // L - Cyan to Blue
+    ];
+
+    // Tetromino shapes
+    const SHAPES = [
+        [[1, 1, 1, 1]], // I
+        [[1, 1], [1, 1]], // O
+        [[0, 1, 0], [1, 1, 1]], // T
+        [[0, 1, 1], [1, 1, 0]], // S
+        [[1, 1, 0], [0, 1, 1]], // Z
+        [[1, 0, 0], [1, 1, 1]], // J
+        [[0, 0, 1], [1, 1, 1]]  // L
+    ];
 
     // Game state
-    let gameActive = false, strikerScore = 0, strikerStage = 1, strikerHP = 100;
-    let player = null, enemies = [], bullets = [], enemyBullets = [], particlesArr = [];
-    let keys = {}, spawnTimer = 0, lastShotTime = 0;
+    let gameActive = false, score = 0, level = 1, lines = 0;
+    let board = [], currentPiece = null, nextPiece = null;
+    let dropCounter = 0, dropInterval = 1000, lastTime = 0;
+    let tetrisParticles = [], tetrisKeys = {}, isPaused = false;
 
-    // Animated background
-    let stars = [], bgOffset = 0;
-
-    const STAGE_CONFIG = {
-        1: { enemySpeed: 1.5, spawnRate: 100, bulletSpeed: 4, boss: false },
-        2: { enemySpeed: 2.0, spawnRate: 80, bulletSpeed: 5, boss: false },
-        3: { enemySpeed: 2.5, spawnRate: 60, bulletSpeed: 6, boss: false },
-        4: { enemySpeed: 3.0, spawnRate: 50, bulletSpeed: 7, boss: false },
-        5: { enemySpeed: 3.5, spawnRate: 40, bulletSpeed: 8, boss: true }
-    };
-
-    class Entity {
-        constructor(x, y, w, h, color) { this.x = x; this.y = y; this.w = w; this.h = h; this.color = color; }
-        draw(ctx) {
-            ctx.fillStyle = this.color;
-            ctx.shadowBlur = 10; ctx.shadowColor = this.color;
-            ctx.fillRect(this.x, this.y, this.w, this.h);
-            ctx.shadowBlur = 0;
-        }
+    // Initialize board
+    function createBoard() {
+        return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
     }
 
-    class Player extends Entity {
-        constructor() { super(450, 650, 50, 50, '#60a5fa'); this.speed = 7; }
-        draw(ctx) {
-            ctx.save();
-            ctx.translate(this.x + 25, this.y + 25);
-
-            // Main body - sleek fighter design
-            ctx.fillStyle = '#3b82f6';
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#60a5fa';
-            ctx.beginPath();
-            ctx.moveTo(0, -25);  // Nose
-            ctx.lineTo(12, -10);
-            ctx.lineTo(18, 10);
-            ctx.lineTo(10, 20);
-            ctx.lineTo(0, 15);
-            ctx.lineTo(-10, 20);
-            ctx.lineTo(-18, 10);
-            ctx.lineTo(-12, -10);
-            ctx.closePath();
-            ctx.fill();
-
-            // Cockpit glow
-            ctx.fillStyle = '#a5f3fc';
-            ctx.beginPath();
-            ctx.arc(0, -5, 6, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Wings
-            ctx.strokeStyle = '#60a5fa';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-18, 10);
-            ctx.lineTo(-25, 5);
-            ctx.lineTo(-18, 0);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(18, 10);
-            ctx.lineTo(25, 5);
-            ctx.lineTo(18, 0);
-            ctx.stroke();
-
-            // Animated thruster
-            const thrusterSize = 8 + Math.random() * 6;
-            const gradient = ctx.createRadialGradient(0, 22, 0, 0, 22, thrusterSize);
-            gradient.addColorStop(0, '#fff');
-            gradient.addColorStop(0.3, '#60a5fa');
-            gradient.addColorStop(1, 'transparent');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(0, 22, thrusterSize, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-        update() {
-            if (keys['ArrowUp'] && this.y > 0) this.y -= this.speed;
-            if (keys['ArrowDown'] && this.y < 800 - 50) this.y += this.speed;
-            if (keys['ArrowLeft'] && this.x > 0) this.x -= this.speed;
-            if (keys['ArrowRight'] && this.x < 1000 - 50) this.x += this.speed;
-            if (keys[' '] && Date.now() - lastShotTime > 200) { this.shoot(); lastShotTime = Date.now(); }
-        }
-        shoot() { bullets.push(new Bullet(this.x + 23, this.y, -12, '#60a5fa')); }
+    // Create piece
+    function createPiece(type = Math.floor(Math.random() * 7)) {
+        return {
+            shape: SHAPES[type],
+            color: type,
+            x: Math.floor(COLS / 2) - Math.floor(SHAPES[type][0].length / 2),
+            y: 0
+        };
     }
 
-    class Enemy extends Entity {
-        constructor(isBoss = false) {
-            super(Math.random() * 920, -80, isBoss ? 150 : 40, isBoss ? 100 : 40, isBoss ? '#a855f7' : '#f97316');
-            this.isBoss = isBoss;
-            this.hp = isBoss ? 50 : 1;
-            this.speed = STAGE_CONFIG[strikerStage].enemySpeed;
-            this.vx = isBoss ? 3 : 0;
-            this.pulse = 0;
-        }
-        draw(ctx) {
-            ctx.save();
-            ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = this.color;
+    // Draw block with gradient
+    function drawBlock(x, y, colorIdx, context = tetrisCtx) {
+        const gradient = context.createLinearGradient(x, y, x + BLOCK_SIZE, y + BLOCK_SIZE);
+        gradient.addColorStop(0, COLORS[colorIdx][0]);
+        gradient.addColorStop(1, COLORS[colorIdx][1]);
 
-            if (!this.isBoss) {
-                // Basic enemy - angular aggressive design
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.moveTo(0, 20);  // Bottom point
-                ctx.lineTo(-20, -15);
-                ctx.lineTo(-10, -20);
-                ctx.lineTo(0, -10);
-                ctx.lineTo(10, -20);
-                ctx.lineTo(20, -15);
-                ctx.closePath();
-                ctx.fill();
+        context.fillStyle = gradient;
+        context.fillRect(x + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
 
-                // Engine glow
-                ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                ctx.arc(-12, -18, 3, 0, Math.PI * 2);
-                ctx.arc(12, -18, 3, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                // Boss - massive battleship
-                this.pulse += 0.1;
-                const pulseGlow = 20 + Math.sin(this.pulse) * 10;
-                ctx.shadowBlur = pulseGlow;
-
-                // Main hull
-                ctx.fillStyle = '#7c3aed';
-                ctx.beginPath();
-                ctx.moveTo(-75, -30);
-                ctx.lineTo(75, -30);
-                ctx.lineTo(60, 0);
-                ctx.lineTo(50, 50);
-                ctx.lineTo(-50, 50);
-                ctx.lineTo(-60, 0);
-                ctx.closePath();
-                ctx.fill();
-
-                // Weapon turrets
-                ctx.fillStyle = '#a855f7';
-                [-40, 40].forEach(x => {
-                    ctx.fillRect(x - 8, -20, 16, 30);
-                });
-
-                // Pulsing core
-                const coreGradient = ctx.createRadialGradient(0, 10, 0, 0, 10, 25);
-                coreGradient.addColorStop(0, '#fff');
-                coreGradient.addColorStop(0.5, '#f0abfc');
-                coreGradient.addColorStop(1, '#a855f7');
-                ctx.fillStyle = coreGradient;
-                ctx.beginPath();
-                ctx.arc(0, 10, 20 + Math.sin(this.pulse) * 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.restore();
-        }
-        update() {
-            this.y += this.isBoss ? 0.5 : this.speed;
-            if (this.isBoss) {
-                this.x += this.vx;
-                if (this.x < 0 || this.x > 850) this.vx *= -1;
-            }
-            if (Math.random() < (this.isBoss ? 0.05 : 0.02)) this.shoot();
-        }
-        shoot() {
-            enemyBullets.push(new Bullet(this.x + this.w / 2 - 3, this.y + this.h, STAGE_CONFIG[strikerStage].bulletSpeed, this.color));
-        }
+        // Glow effect
+        context.shadowBlur = 10;
+        context.shadowColor = COLORS[colorIdx][0];
+        context.strokeStyle = COLORS[colorIdx][0];
+        context.lineWidth = 2;
+        context.strokeRect(x + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+        context.shadowBlur = 0;
     }
 
-    class Bullet extends Entity {
-        constructor(x, y, vy, color) { super(x, y, 4, 15, color); this.vy = vy; }
-        update() { this.y += this.vy; }
-    }
-
-    function initStriker() {
-        // Larger canvas
-        strikerCanvas.width = 1000;
-        strikerCanvas.height = 800;
-
-        // Initialize background stars
-        stars = [];
-        for (let i = 0; i < 200; i++) {
-            stars.push({
-                x: Math.random() * 1000,
-                y: Math.random() * 800,
-                size: Math.random() * 2,
-                speed: 0.5 + Math.random() * 2,
-                opacity: 0.3 + Math.random() * 0.7
-            });
-        }
-
-        player = new Player();
-        enemies = [];
-        bullets = [];
-        enemyBullets = [];
-        particlesArr = [];
-        strikerScore = 0;
-        strikerStage = 1;
-        strikerHP = 100;
-        gameActive = true;
-        bgOffset = 0;
-
-        strikerLanding.style.display = 'none';
-        strikerHUD.style.display = 'block';
-        updateHUD();
-        requestAnimationFrame(strikerLoop);
-    }
-
-    function updateHUD() {
-        strikerScoreEl.textContent = strikerScore; strikerStageEl.textContent = strikerStage;
-        strikerHPFill.style.width = `${strikerHP}%`;
-    }
-
-    function showMsg(txt, callback) {
-        strikerMsgText.textContent = txt; strikerMsg.style.display = 'block';
-        setTimeout(() => { strikerMsg.style.display = 'none'; if (callback) callback(); }, 2000);
-    }
-
-    function strikerLoop() {
-        if (!gameActive) return;
-
-        // Animated galaxy background
-        const bgGradient = sCtx.createLinearGradient(0, 0, 0, 800);
-        bgGradient.addColorStop(0, '#0a0015');
-        bgGradient.addColorStop(0.5, '#1a0a2e');
-        bgGradient.addColorStop(1, '#0f0520');
-        sCtx.fillStyle = bgGradient;
-        sCtx.fillRect(0, 0, 1000, 800);
-
-        // Nebula clouds
-        bgOffset += 0.3;
-        sCtx.save();
-        sCtx.globalAlpha = 0.15;
-        const nebula1 = sCtx.createRadialGradient(300, (bgOffset % 1600) - 400, 0, 300, (bgOffset % 1600) - 400, 300);
-        nebula1.addColorStop(0, '#7c3aed');
-        nebula1.addColorStop(1, 'transparent');
-        sCtx.fillStyle = nebula1;
-        sCtx.fillRect(0, 0, 1000, 800);
-
-        const nebula2 = sCtx.createRadialGradient(700, ((bgOffset * 0.7) % 1600) - 200, 0, 700, ((bgOffset * 0.7) % 1600) - 200, 250);
-        nebula2.addColorStop(0, '#3b82f6');
-        nebula2.addColorStop(1, 'transparent');
-        sCtx.fillStyle = nebula2;
-        sCtx.fillRect(0, 0, 1000, 800);
-        sCtx.restore();
-
-        // Scrolling stars
-        stars.forEach(star => {
-            star.y += star.speed;
-            if (star.y > 800) {
-                star.y = 0;
-                star.x = Math.random() * 1000;
-            }
-            sCtx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-            sCtx.fillRect(star.x, star.y, star.size, star.size);
-        });
-        // Galaxy Stars Background
-        sCtx.fillStyle = '#fff'; for (let i = 0; i < 3; i++) sCtx.fillRect(Math.random() * 900, Math.random() * 500, 1, 1);
-
-        player.update(); player.draw(sCtx);
-
-        spawnTimer++;
-        const cfg = STAGE_CONFIG[strikerStage];
-        if (spawnTimer > cfg.spawnRate && enemies.length < 10) {
-            if (!cfg.boss || (cfg.boss && enemies.filter(e => e.isBoss).length === 0)) {
-                enemies.push(new Enemy(cfg.boss && strikerScore >= 20 * strikerStage));
-            }
-            spawnTimer = 0;
-        }
-
-        bullets.forEach((b, bi) => {
-            b.update(); b.draw(sCtx);
-            if (b.y < -20) bullets.splice(bi, 1);
-            enemies.forEach((e, ei) => {
-                if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
-                    bullets.splice(bi, 1); e.hp--; strikerScore += 10; updateHUD();
-                    if (e.hp <= 0) { enemies.splice(ei, 1); createExplosion(e.x + e.w / 2, e.y + e.h / 2); if (e.isBoss) nextStage(); }
+    // Draw board
+    function drawBoard() {
+        board.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value > 0) {
+                    drawBlock(x * BLOCK_SIZE, y * BLOCK_SIZE, value - 1);
                 }
             });
         });
+    }
 
-        enemyBullets.forEach((eb, ebi) => {
-            eb.update(); eb.draw(sCtx);
-            if (eb.y > 520) enemyBullets.splice(ebi, 1);
-            if (eb.x < player.x + player.w && eb.x + eb.w > player.x && eb.y < player.y + player.h && eb.y + eb.h > player.y) {
-                enemyBullets.splice(ebi, 1); strikerHP -= 10; updateHUD();
-                if (strikerHP <= 0) strikerGameOver();
-            }
+    // Draw piece
+    function drawPiece(piece, offsetX = 0, offsetY = 0, context = tetrisCtx) {
+        piece.shape.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value) {
+                    drawBlock(
+                        (piece.x + x) * BLOCK_SIZE + offsetX,
+                        (piece.y + y) * BLOCK_SIZE + offsetY,
+                        piece.color,
+                        context
+                    );
+                }
+            });
         });
+    }
 
-        enemies.forEach((e, ei) => {
-            e.update(); e.draw(sCtx);
-            if (e.y > 850) enemies.splice(ei, 1);
-            if (e.x < player.x + player.w && e.x + e.w > player.x && e.y < player.y + player.h && e.y + e.h > player.y) {
-                enemies.splice(ei, 1); strikerHP -= 20; updateHUD();
-                if (strikerHP <= 0) strikerGameOver();
+    // Collision detection
+    function collide(piece) {
+        for (let y = 0; y < piece.shape.length; y++) {
+            for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                    const newX = piece.x + x;
+                    const newY = piece.y + y;
+                    if (newX < 0 || newX >= COLS || newY >= ROWS || (newY >= 0 && board[newY][newX])) {
+                        return true;
+                    }
+                }
             }
+        }
+        return false;
+    }
+
+    // Merge piece to board
+    function merge() {
+        currentPiece.shape.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value) {
+                    board[currentPiece.y + y][currentPiece.x + x] = currentPiece.color + 1;
+                }
+            });
         });
-
-        if (!cfg.boss && strikerScore >= 100 * strikerStage) nextStage();
-
-        requestAnimationFrame(strikerLoop);
     }
 
-    function createExplosion(x, y) {
-        for (let i = 0; i < 10; i++) particlesArr.push({ x, y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10, life: 1, c: '#fb923c' });
+    // Rotate piece
+    function rotate() {
+        const rotated = currentPiece.shape[0].map((_, i) =>
+            currentPiece.shape.map(row => row[i]).reverse()
+        );
+        const prev = currentPiece.shape;
+        currentPiece.shape = rotated;
+        if (collide(currentPiece)) {
+            currentPiece.shape = prev;
+        }
     }
 
-    function nextStage() {
-        if (strikerStage === 5) { gameActive = false; showMsg("MISSION COMPLETE! 🎉", () => location.reload()); return; }
-        strikerStage++; enemies = []; bullets = []; enemyBullets = [];
-        showMsg(`STAGE ${strikerStage} START`, () => { });
+    // Move piece
+    function move(dir) {
+        currentPiece.x += dir;
+        if (collide(currentPiece)) {
+            currentPiece.x -= dir;
+        }
     }
 
-    function strikerGameOver() {
-        gameActive = false; showMsg("GAME OVER 💀", () => { strikerLanding.style.display = 'flex'; strikerHUD.style.display = 'none'; });
-    }
-
-    window.addEventListener('keydown', e => { keys[e.key] = true; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) && activeTab === 'minigame') e.preventDefault(); });
-    window.addEventListener('keyup', e => keys[e.key] = false);
-    startStrikerBtn?.addEventListener('click', initStriker);
-
-    // Auto-pause game when tab is hidden
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden && gameActive) {
-            gameActive = false;
-            if (strikerMsg && strikerMsgText) {
-                strikerMsgText.textContent = '일시정지 ⏸️';
-                strikerMsg.style.display = 'block';
+    // Drop piece
+    function drop() {
+        currentPiece.y++;
+        if (collide(currentPiece)) {
+            currentPiece.y--;
+            merge();
+            clearLines();
+            currentPiece = nextPiece;
+            nextPiece = createPiece();
+            if (collide(currentPiece)) {
+                gameOver();
             }
-        } else if (!document.hidden && !gameActive && player) {
-            strikerMsg.style.display = 'none';
-            gameActive = true;
-            requestAnimationFrame(strikerLoop);
+        }
+        dropCounter = 0;
+    }
+
+    // Hard drop
+    function hardDrop() {
+        while (!collide(currentPiece)) {
+            currentPiece.y++;
+        }
+        currentPiece.y--;
+        drop();
+    }
+
+    // Clear lines
+    function clearLines() {
+        let linesCleared = 0;
+        for (let y = ROWS - 1; y >= 0; y--) {
+            if (board[y].every(cell => cell !== 0)) {
+                board.splice(y, 1);
+                board.unshift(Array(COLS).fill(0));
+                linesCleared++;
+                y++; // Check same line again
+
+                // Create particles
+                for (let i = 0; i < 20; i++) {
+                    tetrisParticles.push({
+                        x: Math.random() * COLS * BLOCK_SIZE,
+                        y: y * BLOCK_SIZE,
+                        vx: (Math.random() - 0.5) * 5,
+                        vy: (Math.random() - 0.5) * 5,
+                        life: 1,
+                        color: COLORS[Math.floor(Math.random() * 7)][0]
+                    });
+                }
+            }
+        }
+
+        if (linesCleared > 0) {
+            lines += linesCleared;
+            score += [0, 100, 300, 500, 800][linesCleared] * level;
+            level = Math.floor(lines / 10) + 1;
+            dropInterval = Math.max(100, 1000 - (level - 1) * 100);
+            updateHUD();
+        }
+    }
+
+    // Update HUD
+    function updateHUD() {
+        tetrisScoreEl.textContent = score;
+        tetrisLevelEl.textContent = level;
+        tetrisLinesEl.textContent = lines;
+
+        // Draw next piece
+        nextCtx.fillStyle = 'rgba(0,0,0,0.3)';
+        nextCtx.fillRect(0, 0, 80, 80);
+        if (nextPiece) {
+            const offsetX = (80 - nextPiece.shape[0].length * 20) / 2;
+            const offsetY = (80 - nextPiece.shape.length * 20) / 2;
+            nextPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        const gradient = nextCtx.createLinearGradient(
+                            offsetX + x * 20, offsetY + y * 20,
+                            offsetX + x * 20 + 20, offsetY + y * 20 + 20
+                        );
+                        gradient.addColorStop(0, COLORS[nextPiece.color][0]);
+                        gradient.addColorStop(1, COLORS[nextPiece.color][1]);
+                        nextCtx.fillStyle = gradient;
+                        nextCtx.fillRect(offsetX + x * 20 + 1, offsetY + y * 20 + 1, 18, 18);
+                    }
+                });
+            });
+        }
+    }
+
+    // Game over
+    function gameOver() {
+        gameActive = false;
+        tetrisMsgText.textContent = `GAME OVER! Score: ${score}`;
+        tetrisMsg.style.display = 'block';
+        setTimeout(() => {
+            tetrisMsg.style.display = 'none';
+            tetrisLanding.style.display = 'flex';
+            tetrisHUD.style.display = 'none';
+        }, 3000);
+    }
+
+    // Initialize game
+    function initTetris() {
+        tetrisCanvas.width = COLS * BLOCK_SIZE;
+        tetrisCanvas.height = ROWS * BLOCK_SIZE;
+
+        board = createBoard();
+        currentPiece = createPiece();
+        nextPiece = createPiece();
+        score = 0;
+        level = 1;
+        lines = 0;
+        tetrisParticles = [];
+        isPaused = false;
+        gameActive = true;
+        dropCounter = 0;
+        lastTime = 0;
+
+        tetrisLanding.style.display = 'none';
+        tetrisHUD.style.display = 'block';
+        updateHUD();
+        requestAnimationFrame(tetrisLoop);
+    }
+
+    // Game loop
+    function tetrisLoop(time = 0) {
+        if (!gameActive) return;
+
+        const deltaTime = time - lastTime;
+        lastTime = time;
+
+        if (!isPaused) {
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                drop();
+            }
+        }
+
+        // Draw background gradient
+        const bgGradient = tetrisCtx.createLinearGradient(0, 0, 0, ROWS * BLOCK_SIZE);
+        bgGradient.addColorStop(0, '#0a0015');
+        bgGradient.addColorStop(0.5, '#1a0a2e');
+        bgGradient.addColorStop(1, '#0f0520');
+        tetrisCtx.fillStyle = bgGradient;
+        tetrisCtx.fillRect(0, 0, COLS * BLOCK_SIZE, ROWS * BLOCK_SIZE);
+
+        // Draw grid
+        tetrisCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+        tetrisCtx.lineWidth = 1;
+        for (let i = 0; i <= COLS; i++) {
+            tetrisCtx.beginPath();
+            tetrisCtx.moveTo(i * BLOCK_SIZE, 0);
+            tetrisCtx.lineTo(i * BLOCK_SIZE, ROWS * BLOCK_SIZE);
+            tetrisCtx.stroke();
+        }
+        for (let i = 0; i <= ROWS; i++) {
+            tetrisCtx.beginPath();
+            tetrisCtx.moveTo(0, i * BLOCK_SIZE);
+            tetrisCtx.lineTo(COLS * BLOCK_SIZE, i * BLOCK_SIZE);
+            tetrisCtx.stroke();
+        }
+
+        // Draw particles
+        tetrisParticles.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            tetrisCtx.fillStyle = p.color;
+            tetrisCtx.globalAlpha = p.life;
+            tetrisCtx.fillRect(p.x, p.y, 3, 3);
+            if (p.life <= 0) tetrisParticles.splice(i, 1);
+        });
+        tetrisCtx.globalAlpha = 1;
+
+        drawBoard();
+        if (currentPiece && !isPaused) drawPiece(currentPiece);
+
+        requestAnimationFrame(tetrisLoop);
+    }
+
+    // Controls
+    window.addEventListener('keydown', e => {
+        if (!gameActive || activeTab !== 'minigame') return;
+
+        if (e.key === 'p' || e.key === 'P') {
+            isPaused = !isPaused;
+            tetrisMsgText.textContent = isPaused ? 'PAUSED ⏸️' : '';
+            tetrisMsg.style.display = isPaused ? 'block' : 'none';
+        }
+
+        if (isPaused) return;
+
+        if (e.key === 'ArrowLeft') move(-1);
+        if (e.key === 'ArrowRight') move(1);
+        if (e.key === 'ArrowDown') drop();
+        if (e.key === 'ArrowUp') rotate();
+        if (e.key === ' ') { hardDrop(); e.preventDefault(); }
+
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+            e.preventDefault();
         }
     });
+
+    startTetrisBtn?.addEventListener('click', initTetris);
+
+    // Auto-pause when tab hidden or menu switched
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && gameActive && !isPaused) {
+            isPaused = true;
+            tetrisMsgText.textContent = '일시정지 ⏸️';
+            tetrisMsg.style.display = 'block';
+        }
+    });
+
+    // Pause when switching tabs
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (gameActive && !isPaused && activeTab !== 'minigame') {
+                isPaused = true;
+                tetrisMsgText.textContent = '일시정지 ⏸️';
+                tetrisMsg.style.display = 'block';
+            }
+        });
+    });
+
+    // Start stock refresh automatically
+    startStockRefresh();
 
     // Global cursor tracking
     document.addEventListener('mousemove', e => {
