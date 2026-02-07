@@ -219,18 +219,18 @@ app.get('/api/insights/market', (req, res) => {
     // Simulated real-time-like data for demonstration
     // In production, integrate with Alpha Vantage or Finnhub
     const stocks = [
-        // US Top 5
-        { symbol: 'NVDA', name: 'NVIDIA', price: 135.22, change: 2.45, percent: 1.84, region: 'US' },
-        { symbol: 'MSFT', name: 'Microsoft', price: 412.15, change: -1.20, percent: -0.29, region: 'US' },
-        { symbol: 'GOOGL', name: 'Alphabet', price: 154.88, change: 0.95, percent: 0.62, region: 'US' },
-        { symbol: 'AAPL', name: 'Apple', price: 232.10, change: 1.15, percent: 0.50, region: 'US' },
-        { symbol: 'TSLA', name: 'Tesla', price: 185.30, change: -2.15, percent: -1.15, region: 'US' },
-        // KR Top 5
-        { symbol: '005930.KS', name: '삼성전자', price: 72400, change: 800, percent: 1.12, region: 'KR' },
-        { symbol: '000660.KS', name: 'SK하이닉스', price: 185600, change: 4200, percent: 2.32, region: 'KR' },
-        { symbol: '035420.KS', name: 'NAVER', price: 198500, change: -1500, percent: -0.75, region: 'KR' },
-        { symbol: '035720.KS', name: '카카오', price: 54200, change: 300, percent: 0.56, region: 'KR' },
-        { symbol: '005380.KS', name: '현대차', price: 245000, change: 5500, percent: 2.30, region: 'KR' }
+        // US Top 5 (Estimates for Feb 2026)
+        { symbol: 'NVDA', name: 'NVIDIA', price: 185.41, change: 3.12, percent: 1.71, region: 'US' },
+        { symbol: 'MSFT', name: 'Microsoft', price: 401.14, change: -2.45, percent: -0.61, region: 'US' },
+        { symbol: 'GOOGL', name: 'Alphabet', price: 322.86, change: 4.55, percent: 1.43, region: 'US' },
+        { symbol: 'AAPL', name: 'Apple', price: 278.12, change: 2.21, percent: 0.80, region: 'US' },
+        { symbol: 'TSLA', name: 'Tesla', price: 411.30, change: -8.90, percent: -2.12, region: 'US' },
+        // KR Top 5 (Estimates for Feb 2026)
+        { symbol: '005930.KS', name: '삼성전자', price: 169000, change: 5000, percent: 3.05, region: 'KR' },
+        { symbol: '000660.KS', name: 'SK하이닉스', price: 839000, change: 12000, percent: 1.45, region: 'KR' },
+        { symbol: '035420.KS', name: 'NAVER', price: 249000, change: -3500, percent: -1.39, region: 'KR' },
+        { symbol: '035720.KS', name: '카카오', price: 56200, change: 800, percent: 1.44, region: 'KR' },
+        { symbol: '005380.KS', name: '현대차', price: 492500, change: 15500, percent: 3.25, region: 'KR' }
     ];
     res.json(stocks);
 });

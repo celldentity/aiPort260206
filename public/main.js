@@ -1,4 +1,8 @@
+// [v60] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
+    // Purge old snake data to prevent ghosting
+    localStorage.removeItem('aura_snake_high');
+
     // Auth & Elements
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
@@ -577,6 +581,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modal) modal.scrollTop = 0;
         }, 10);
     }
+
+    // Modal Closing Logic (v60)
+    function closeModal() {
+        modal.classList.remove('active');
+        body.style.overflow = 'auto';
+        // HTML inner content cleanup to stop videos
+        setTimeout(() => { modalBody.innerHTML = ''; }, 300);
+    }
+
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    document.getElementById('close-detail-modal')?.addEventListener('click', closeModal);
+
+    // Escape key to close modal
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+    });
 
     // --- AI Insights System (v58 Updated) ---
     async function loadAIInsights() {
