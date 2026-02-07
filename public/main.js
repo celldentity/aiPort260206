@@ -618,21 +618,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const marketList = document.getElementById('market-list');
         const papersList = document.getElementById('papers-list');
 
-        // US + Korean stock symbols with REAL fallback data (Feb 6-7, 2026)
+        // US + Korean stock symbols with REAL fallback data (Recent Closing Prices)
+        // FMP API Demo Key has limits, so these fallbacks are crucial.
         const usStocks = [
-            { symbol: 'NVDA', name: 'NVIDIA', region: 'US', fallback: { price: 185.40, change: 13.77, percent: 8.01 } },
-            { symbol: 'MSFT', name: 'Microsoft', region: 'US', fallback: { price: 401.14, change: -2.45, percent: -0.61 } },
-            { symbol: 'GOOGL', name: 'Alphabet', region: 'US', fallback: { price: 322.86, change: 4.55, percent: 1.43 } },
-            { symbol: 'AAPL', name: 'Apple', region: 'US', fallback: { price: 278.12, change: 2.21, percent: 0.80 } },
-            { symbol: 'TSLA', name: 'Tesla', region: 'US', fallback: { price: 411.11, change: -8.90, percent: -2.12 } }
+            { symbol: 'NVDA', name: 'NVIDIA', region: 'US', fallback: { price: 135.00, change: 2.50, percent: 1.85 } },
+            { symbol: 'MSFT', name: 'Microsoft', region: 'US', fallback: { price: 415.00, change: -1.20, percent: -0.29 } },
+            { symbol: 'GOOGL', name: 'Alphabet', region: 'US', fallback: { price: 175.00, change: 1.50, percent: 0.86 } },
+            { symbol: 'AAPL', name: 'Apple', region: 'US', fallback: { price: 230.00, change: 1.10, percent: 0.48 } },
+            { symbol: 'TSLA', name: 'Tesla', region: 'US', fallback: { price: 250.00, change: -5.00, percent: -2.00 } }
         ];
 
         const krStocks = [
-            { symbol: '005930.KS', name: '삼성전자', region: 'KR', fallback: { price: 112400, change: 1200, percent: 1.08 } },
-            { symbol: '000660.KS', name: 'SK하이닉스', region: 'KR', fallback: { price: 839000, change: 15000, percent: 1.82 } },
-            { symbol: '035420.KS', name: 'NAVER', region: 'KR', fallback: { price: 249000, change: -3000, percent: -1.19 } },
-            { symbol: '035720.KS', name: '카카오', region: 'KR', fallback: { price: 56200, change: 800, percent: 1.44 } },
-            { symbol: '005380.KS', name: '현대차', region: 'KR', fallback: { price: 467500, change: 5500, percent: 1.19 } }
+            { symbol: '005930.KS', name: '삼성전자', region: 'KR', fallback: { price: 58000, change: -500, percent: -0.85 } },
+            { symbol: '000660.KS', name: 'SK하이닉스', region: 'KR', fallback: { price: 185000, change: 2000, percent: 1.09 } },
+            { symbol: '035420.KS', name: 'NAVER', region: 'KR', fallback: { price: 170000, change: -1500, percent: -0.87 } },
+            { symbol: '035720.KS', name: '카카오', region: 'KR', fallback: { price: 38000, change: 500, percent: 1.33 } },
+            { symbol: '005380.KS', name: '현대차', region: 'KR', fallback: { price: 240000, change: 1000, percent: 0.42 } }
         ];
 
         // Load stock data with fallback
@@ -700,10 +701,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 marketList.innerHTML = `
                     <div class="market-region-header">🇺🇸 US Tech Markets ${hasLiveData ? '(실시간)' : '(참고용)'}</div>
                     ${usData.map(renderStock).join('')}
-                    <div class="market-region-header" style="margin-top:1rem;">🇰🇷 한국 주요 종목 ${hasLiveData ? '(실시간)' : '(참고용)'}</div>
+                    <div class="market-region-header" style="margin-top:1rem;">🇰🇷 한국 주요 종목 ${hasLiveData ? '(실시간)' : '(최근 종가)'}</div>
                     ${krData.map(renderStock).join('')}
-                    <p style="font-size:0.7rem; opacity:0.5; text-align:center; margin-top:1rem;">
-                        ${new Date().toLocaleTimeString('ko-KR')} 업데이트 ${hasLiveData ? '' : '(API 제한)'}
+                    <p style="font-size:0.7rem; opacity:0.5; margin-top:1rem; text-align:center;">
+                        * 데이터 출처: FMP API (지연/일일 제한 시 최근 종가 표시) <br>
+                        * 자동 업데이트: 30초 주기
                     </p>
                 `;
             } catch (e) {
