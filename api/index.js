@@ -1,12 +1,59 @@
-const express = require('express');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const path = require('path');
-require('dotenv').config();
+const cheerio = require('cheerio'); // [NEW] For scraping
 
-const app = express();
-// --- Express Middlewares ---
-app.use(cors());
+// ... (existing imports)
+
+// ... (existing middleware)
+
+// [NEW] Stock Scraping Endpoint (Naver Finance)
+app.get('/api/stock', async (req, res) => {
+    const code = req.query.code; // e.g., '005930'
+    if (!code) return res.status(400).json({ error: 'Code required' });
+
+    try {
+        const url = `https://finance.naver.com/item/main.naver?code=${code}`;
+        const response = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
+        });
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        // Parse Data from Naver Finance Structure
+        const priceStr = $('.no_today .blind').text().replace(/,/g, '');
+        const noExday = $('.no_exday');
+        // Usually: 1st blind is Change, 2nd blind is Percent
+        const changeStr = noExday.find('.blind').eq(0).text().replace(/,/g, '');
+        const percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
+
+        // Check up/down class for sign
+        const isUp = noExday.find('.ico.up').length > 0;
+        const isDown = noExday.find('.ico.down').length > 0;
+
+        let change = parseFloat(changeStr);
+        let percent = parseFloat(percentStr);
+
+        if (isDown) {
+            change = -change;
+            percent = -percent;
+        }
+
+        if (!priceStr) throw new Error('Parsing failed');
+
+        res.json({
+            price: parseFloat(priceStr),
+            change: change || 0,
+            percent: percent || 0,
+            name: $('.wrap_company h2 a').text() || code
+        });
+    } catch (e) {
+        console.error(`Stock fetch failed for ${code}:`, e);
+        res.status(500).json({ error: 'Failed to fetch stock data' });
+    }
+});
+
+/**
+ * 3. Market \u0026 Coding List (Mock Data)
+ */
+// ... (rest of the file)
 app.use(express.json());
 
 // Vercel deployment uses 'public/' directory automatically.

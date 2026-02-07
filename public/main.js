@@ -642,23 +642,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loadStocks = async (stocks) => {
                     const stockPromises = stocks.map(async (stock) => {
                         try {
-                            // Try FMP API (demo key works for limited requests)
-                            const response = await fetch(`https://financialmodelingprep.com/api/v3/quote/${stock.symbol}?apikey=demo`, { timeout: 3000 });
-                            const data = await response.json();
+                            let data;
+                            // [NEW] Use our own API for Korean stocks (Naver Scraping)
+                            if (stock.region === 'KR') {
+                                const code = stock.symbol.replace('.KS', '');
+                                const response = await fetch(`/api/stock?code=${code}`);
+                                if (!response.ok) throw new Error('API Error');
+                                data = await response.json();
 
-                            if (data && data.length > 0 && data[0].price > 0) {
-                                const quote = data[0];
                                 return {
                                     symbol: stock.symbol,
                                     name: stock.name,
                                     region: stock.region,
-                                    price: quote.price,
-                                    change: quote.change || 0,
-                                    percent: quote.changesPercentage || 0,
+                                    price: data.price,
+                                    change: data.change,
+                                    percent: data.percent,
                                     isLive: true
                                 };
+                            } else {
+                                // US Stocks: Keep using FMP Demo (or fallback if fails)
+                                const response = await fetch(`https://financialmodelingprep.com/api/v3/quote/${stock.symbol}?apikey=demo`, { timeout: 3000 });
+                                const json = await response.json();
+                                if (json && json.length > 0) {
+                                    const quote = json[0];
+                                    return {
+                                        symbol: stock.symbol,
+                                        name: stock.name,
+                                        region: stock.region,
+                                        price: quote.price,
+                                        change: quote.change,
+                                        percent: quote.changesPercentage,
+                                        isLive: true
+                                    };
+                                }
+                                throw new Error('FMP No Data');
                             }
-                            throw new Error('Invalid API response');
                         } catch (e) {
                             // Use fallback data
                             return {
@@ -668,12 +686,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 price: stock.fallback.price,
                                 change: stock.fallback.change,
                                 percent: stock.fallback.percent,
-                                isLive: false
+                                isLive: false // Failed to fetch live
                             };
                         }
                     });
                     return await Promise.all(stockPromises);
                 };
+
 
                 const [usData, krData] = await Promise.all([loadStocks(usStocks), loadStocks(krStocks)]);
                 const hasLiveData = [...usData, ...krData].some(s => s.isLive);
@@ -701,12 +720,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 marketList.innerHTML = `
                     <div class="market-region-header">🇺🇸 US Tech Markets ${hasLiveData ? '(실시간)' : '(참고용)'}</div>
                     ${usData.map(renderStock).join('')}
-                    <div class="market-region-header" style="margin-top:1rem;">🇰🇷 한국 주요 종목 ${hasLiveData ? '(실시간)' : '(최근 종가)'}</div>
-                    ${krData.map(renderStock).join('')}
-                    <p style="font-size:0.7rem; opacity:0.5; margin-top:1rem; text-align:center;">
-                        * 데이터 출처: FMP API (지연/일일 제한 시 최근 종가 표시) <br>
-                        * 자동 업데이트: 30초 주기
-                    </p>
+                    <div class="market-region-header" style="margin-top:1rem;">🇰🇷 한국 주요 종목 ${hasLiveData ? '(네이버 실시간)' : '(최근 종가)'}</div>
+                ${krData.map(renderStock).join('')}
+                <p style="font-size:0.7rem; opacity:0.5; margin-top:1rem; text-align:center;">
+                    * 데이터 출처: 네이버 금융 (KR) / FMP API (US) <br>
+                    * 자동 업데이트: 30초 주기
+                </p>
                 `;
             } catch (e) {
                 console.error('Market load failed', e);
