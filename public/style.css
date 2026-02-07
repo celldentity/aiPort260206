@@ -990,12 +990,13 @@ main {
     background: rgba(255, 255, 255, 0.05);
 }
 
-/* [v59] Aura Striker Styles */
+/* [v64] Aura Striker Styles - Enhanced Graphics */
 .game-view-container {
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     margin: 2rem auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 5 / 4;
+    /* 1000x800 */
     position: relative;
     overflow: hidden;
     padding: 0 !important;

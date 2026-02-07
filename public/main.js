@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- [v59] Aura Striker: Arcade Space Shooter Engine ---
+    // --- [v64] Aura Striker: Enhanced Graphics Edition ---
     const strikerCanvas = document.getElementById('striker-canvas');
     const sCtx = strikerCanvas?.getContext('2d');
     const startStrikerBtn = document.getElementById('btn-striker-start');
@@ -725,9 +725,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const strikerStageEl = document.getElementById('striker-stage');
     const strikerHPFill = document.getElementById('striker-hp-fill');
 
+    // Game state
     let gameActive = false, strikerScore = 0, strikerStage = 1, strikerHP = 100;
     let player = null, enemies = [], bullets = [], enemyBullets = [], particlesArr = [];
     let keys = {}, spawnTimer = 0, lastShotTime = 0;
+
+    // Animated background
+    let stars = [], bgOffset = 0;
 
     const STAGE_CONFIG = {
         1: { enemySpeed: 1.5, spawnRate: 100, bulletSpeed: 4, boss: false },
@@ -748,48 +752,152 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     class Player extends Entity {
-        constructor() { super(450, 400, 40, 40, '#a5b4fc'); this.speed = 6; }
+        constructor() { super(450, 650, 50, 50, '#60a5fa'); this.speed = 7; }
         draw(ctx) {
-            ctx.save(); ctx.translate(this.x + 20, this.y + 20);
-            ctx.strokeStyle = this.color; ctx.lineWidth = 3; ctx.shadowBlur = 15; ctx.shadowColor = this.color;
-            ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 10); ctx.lineTo(0, 5); ctx.lineTo(-15, 10); ctx.closePath(); ctx.stroke();
-            // Thruster
-            ctx.fillStyle = '#6366f1'; ctx.beginPath(); ctx.arc(0, 15, 5 + Math.random() * 5, 0, Math.PI * 2); ctx.fill();
+            ctx.save();
+            ctx.translate(this.x + 25, this.y + 25);
+
+            // Main body - sleek fighter design
+            ctx.fillStyle = '#3b82f6';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#60a5fa';
+            ctx.beginPath();
+            ctx.moveTo(0, -25);  // Nose
+            ctx.lineTo(12, -10);
+            ctx.lineTo(18, 10);
+            ctx.lineTo(10, 20);
+            ctx.lineTo(0, 15);
+            ctx.lineTo(-10, 20);
+            ctx.lineTo(-18, 10);
+            ctx.lineTo(-12, -10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cockpit glow
+            ctx.fillStyle = '#a5f3fc';
+            ctx.beginPath();
+            ctx.arc(0, -5, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wings
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-18, 10);
+            ctx.lineTo(-25, 5);
+            ctx.lineTo(-18, 0);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(18, 10);
+            ctx.lineTo(25, 5);
+            ctx.lineTo(18, 0);
+            ctx.stroke();
+
+            // Animated thruster
+            const thrusterSize = 8 + Math.random() * 6;
+            const gradient = ctx.createRadialGradient(0, 22, 0, 0, 22, thrusterSize);
+            gradient.addColorStop(0, '#fff');
+            gradient.addColorStop(0.3, '#60a5fa');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 22, thrusterSize, 0, Math.PI * 2);
+            ctx.fill();
+
             ctx.restore();
         }
         update() {
             if (keys['ArrowUp'] && this.y > 0) this.y -= this.speed;
-            if (keys['ArrowDown'] && this.y < 500 - 40) this.y += this.speed;
+            if (keys['ArrowDown'] && this.y < 800 - 50) this.y += this.speed;
             if (keys['ArrowLeft'] && this.x > 0) this.x -= this.speed;
-            if (keys['ArrowRight'] && this.x < 900 - 40) this.x += this.speed;
+            if (keys['ArrowRight'] && this.x < 1000 - 50) this.x += this.speed;
             if (keys[' '] && Date.now() - lastShotTime > 200) { this.shoot(); lastShotTime = Date.now(); }
         }
-        shoot() { bullets.push(new Bullet(this.x + 18, this.y, -10, '#fff')); }
+        shoot() { bullets.push(new Bullet(this.x + 23, this.y, -12, '#60a5fa')); }
     }
 
     class Enemy extends Entity {
         constructor(isBoss = false) {
-            super(Math.random() * 850, -50, isBoss ? 120 : 30, isBoss ? 80 : 30, isBoss ? '#f43f5e' : '#fb923c');
-            this.isBoss = isBoss; this.hp = isBoss ? 50 : 1; this.speed = STAGE_CONFIG[strikerStage].enemySpeed;
-            this.vx = isBoss ? 2 : 0;
+            super(Math.random() * 920, -80, isBoss ? 150 : 40, isBoss ? 100 : 40, isBoss ? '#a855f7' : '#f97316');
+            this.isBoss = isBoss;
+            this.hp = isBoss ? 50 : 1;
+            this.speed = STAGE_CONFIG[strikerStage].enemySpeed;
+            this.vx = isBoss ? 3 : 0;
+            this.pulse = 0;
         }
         draw(ctx) {
-            ctx.save(); ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
-            ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.shadowBlur = 10; ctx.shadowColor = this.color;
+            ctx.save();
+            ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = this.color;
+
             if (!this.isBoss) {
-                ctx.beginPath(); ctx.moveTo(0, 15); ctx.lineTo(-15, -10); ctx.lineTo(15, -10); ctx.closePath(); ctx.stroke();
+                // Basic enemy - angular aggressive design
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(0, 20);  // Bottom point
+                ctx.lineTo(-20, -15);
+                ctx.lineTo(-10, -20);
+                ctx.lineTo(0, -10);
+                ctx.lineTo(10, -20);
+                ctx.lineTo(20, -15);
+                ctx.closePath();
+                ctx.fill();
+
+                // Engine glow
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(-12, -18, 3, 0, Math.PI * 2);
+                ctx.arc(12, -18, 3, 0, Math.PI * 2);
+                ctx.fill();
             } else {
-                ctx.beginPath(); ctx.moveTo(-60, -20); ctx.lineTo(60, -20); ctx.lineTo(40, 40); ctx.lineTo(-40, 40); ctx.closePath(); ctx.stroke();
-                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill(); // Core
+                // Boss - massive battleship
+                this.pulse += 0.1;
+                const pulseGlow = 20 + Math.sin(this.pulse) * 10;
+                ctx.shadowBlur = pulseGlow;
+
+                // Main hull
+                ctx.fillStyle = '#7c3aed';
+                ctx.beginPath();
+                ctx.moveTo(-75, -30);
+                ctx.lineTo(75, -30);
+                ctx.lineTo(60, 0);
+                ctx.lineTo(50, 50);
+                ctx.lineTo(-50, 50);
+                ctx.lineTo(-60, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                // Weapon turrets
+                ctx.fillStyle = '#a855f7';
+                [-40, 40].forEach(x => {
+                    ctx.fillRect(x - 8, -20, 16, 30);
+                });
+
+                // Pulsing core
+                const coreGradient = ctx.createRadialGradient(0, 10, 0, 0, 10, 25);
+                coreGradient.addColorStop(0, '#fff');
+                coreGradient.addColorStop(0.5, '#f0abfc');
+                coreGradient.addColorStop(1, '#a855f7');
+                ctx.fillStyle = coreGradient;
+                ctx.beginPath();
+                ctx.arc(0, 10, 20 + Math.sin(this.pulse) * 3, 0, Math.PI * 2);
+                ctx.fill();
             }
+
             ctx.restore();
         }
         update() {
-            this.y += this.isBoss ? 0.3 : this.speed;
-            if (this.isBoss) { this.x += this.vx; if (this.x < 0 || this.x > 780) this.vx *= -1; }
-            if (Math.random() < 0.02) this.shoot();
+            this.y += this.isBoss ? 0.5 : this.speed;
+            if (this.isBoss) {
+                this.x += this.vx;
+                if (this.x < 0 || this.x > 850) this.vx *= -1;
+            }
+            if (Math.random() < (this.isBoss ? 0.05 : 0.02)) this.shoot();
         }
-        shoot() { enemyBullets.push(new Bullet(this.x + this.w / 2 - 2, this.y + this.h, STAGE_CONFIG[strikerStage].bulletSpeed, this.color)); }
+        shoot() {
+            enemyBullets.push(new Bullet(this.x + this.w / 2 - 3, this.y + this.h, STAGE_CONFIG[strikerStage].bulletSpeed, this.color));
+        }
     }
 
     class Bullet extends Entity {
@@ -798,11 +906,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initStriker() {
-        strikerCanvas.width = 900; strikerCanvas.height = 500;
-        player = new Player(); enemies = []; bullets = []; enemyBullets = []; particlesArr = [];
-        strikerScore = 0; strikerStage = 1; strikerHP = 100; gameActive = true;
-        strikerLanding.style.display = 'none'; strikerHUD.style.display = 'block';
-        updateHUD(); requestAnimationFrame(strikerLoop);
+        // Larger canvas
+        strikerCanvas.width = 1000;
+        strikerCanvas.height = 800;
+
+        // Initialize background stars
+        stars = [];
+        for (let i = 0; i < 200; i++) {
+            stars.push({
+                x: Math.random() * 1000,
+                y: Math.random() * 800,
+                size: Math.random() * 2,
+                speed: 0.5 + Math.random() * 2,
+                opacity: 0.3 + Math.random() * 0.7
+            });
+        }
+
+        player = new Player();
+        enemies = [];
+        bullets = [];
+        enemyBullets = [];
+        particlesArr = [];
+        strikerScore = 0;
+        strikerStage = 1;
+        strikerHP = 100;
+        gameActive = true;
+        bgOffset = 0;
+
+        strikerLanding.style.display = 'none';
+        strikerHUD.style.display = 'block';
+        updateHUD();
+        requestAnimationFrame(strikerLoop);
     }
 
     function updateHUD() {
@@ -817,7 +951,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function strikerLoop() {
         if (!gameActive) return;
-        sCtx.fillStyle = 'rgba(5, 5, 5, 0.4)'; sCtx.fillRect(0, 0, 900, 500);
+
+        // Animated galaxy background
+        const bgGradient = sCtx.createLinearGradient(0, 0, 0, 800);
+        bgGradient.addColorStop(0, '#0a0015');
+        bgGradient.addColorStop(0.5, '#1a0a2e');
+        bgGradient.addColorStop(1, '#0f0520');
+        sCtx.fillStyle = bgGradient;
+        sCtx.fillRect(0, 0, 1000, 800);
+
+        // Nebula clouds
+        bgOffset += 0.3;
+        sCtx.save();
+        sCtx.globalAlpha = 0.15;
+        const nebula1 = sCtx.createRadialGradient(300, (bgOffset % 1600) - 400, 0, 300, (bgOffset % 1600) - 400, 300);
+        nebula1.addColorStop(0, '#7c3aed');
+        nebula1.addColorStop(1, 'transparent');
+        sCtx.fillStyle = nebula1;
+        sCtx.fillRect(0, 0, 1000, 800);
+
+        const nebula2 = sCtx.createRadialGradient(700, ((bgOffset * 0.7) % 1600) - 200, 0, 700, ((bgOffset * 0.7) % 1600) - 200, 250);
+        nebula2.addColorStop(0, '#3b82f6');
+        nebula2.addColorStop(1, 'transparent');
+        sCtx.fillStyle = nebula2;
+        sCtx.fillRect(0, 0, 1000, 800);
+        sCtx.restore();
+
+        // Scrolling stars
+        stars.forEach(star => {
+            star.y += star.speed;
+            if (star.y > 800) {
+                star.y = 0;
+                star.x = Math.random() * 1000;
+            }
+            sCtx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+            sCtx.fillRect(star.x, star.y, star.size, star.size);
+        });
         // Galaxy Stars Background
         sCtx.fillStyle = '#fff'; for (let i = 0; i < 3; i++) sCtx.fillRect(Math.random() * 900, Math.random() * 500, 1, 1);
 
@@ -854,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         enemies.forEach((e, ei) => {
             e.update(); e.draw(sCtx);
-            if (e.y > 550) enemies.splice(ei, 1);
+            if (e.y > 850) enemies.splice(ei, 1);
             if (e.x < player.x + player.w && e.x + e.w > player.x && e.y < player.y + player.h && e.y + e.h > player.y) {
                 enemies.splice(ei, 1); strikerHP -= 20; updateHUD();
                 if (strikerHP <= 0) strikerGameOver();
