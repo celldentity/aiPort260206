@@ -611,44 +611,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
 
-    // --- AI Insights System (v58 Updated) ---
+    // --- AI Insights System (v61 Updated - TradingView Widget) ---
     async function loadAIInsights() {
-        const marketList = document.getElementById('market-list');
         const papersList = document.getElementById('papers-list');
 
-        // 1. Load Market Data (Expanding to US/KR top 5 each)
-        try {
-            const mResp = await fetch('/api/insights/market');
-            const stocks = await mResp.json();
-            if (marketList && Array.isArray(stocks)) {
-                const usStocks = stocks.filter(s => s.region === 'US');
-                const krStocks = stocks.filter(s => s.region === 'KR');
+        // Market data now handled by TradingView widget - no fetching needed
 
-                const renderStock = (s) => `
-                    <div class="market-item">
-                        <div class="market-info-left">
-                            <span class="market-symbol">${s.symbol}</span>
-                            <span class="market-name">${s.name}</span>
-                        </div>
-                        <div class="market-info-right">
-                            <div class="market-price">${s.region === 'US' ? '$' : ''}${s.price.toLocaleString()}${s.region === 'KR' ? '원' : ''}</div>
-                            <div class="market-change ${s.change >= 0 ? 'up' : 'down'}">
-                                ${s.change >= 0 ? '▲' : '▼'} ${Math.abs(s.percent).toFixed(2)}%
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                marketList.innerHTML = `
-                    <div class="market-region-header">US Tech Markets</div>
-                    ${usStocks.map(renderStock).join('')}
-                    <div class="market-region-header">KR Tech Markets</div>
-                    ${krStocks.map(renderStock).join('')}
-                `;
-            }
-        } catch (e) { console.error('Market load failed', e); }
-
-        // 2. Load ArXiv Papers
+        // Load ArXiv Papers
         try {
             const pResp = await fetch('/api/insights/papers');
             const papers = await pResp.json();

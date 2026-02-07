@@ -215,25 +215,9 @@ app.get('/api/insights/papers', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/insights/market', (req, res) => {
-    // Simulated real-time-like data for demonstration
-    // In production, integrate with Alpha Vantage or Finnhub
-    const stocks = [
-        // US Top 5 (Estimates for Feb 2026)
-        { symbol: 'NVDA', name: 'NVIDIA', price: 185.41, change: 3.12, percent: 1.71, region: 'US' },
-        { symbol: 'MSFT', name: 'Microsoft', price: 401.14, change: -2.45, percent: -0.61, region: 'US' },
-        { symbol: 'GOOGL', name: 'Alphabet', price: 322.86, change: 4.55, percent: 1.43, region: 'US' },
-        { symbol: 'AAPL', name: 'Apple', price: 278.12, change: 2.21, percent: 0.80, region: 'US' },
-        { symbol: 'TSLA', name: 'Tesla', price: 411.30, change: -8.90, percent: -2.12, region: 'US' },
-        // KR Top 5 (Estimates for Feb 2026)
-        { symbol: '005930.KS', name: '삼성전자', price: 169000, change: 5000, percent: 3.05, region: 'KR' },
-        { symbol: '000660.KS', name: 'SK하이닉스', price: 839000, change: 12000, percent: 1.45, region: 'KR' },
-        { symbol: '035420.KS', name: 'NAVER', price: 249000, change: -3500, percent: -1.39, region: 'KR' },
-        { symbol: '035720.KS', name: '카카오', price: 56200, change: 800, percent: 1.44, region: 'KR' },
-        { symbol: '005380.KS', name: '현대차', price: 492500, change: 15500, percent: 3.25, region: 'KR' }
-    ];
-    res.json(stocks);
-});
+
+// Market data now provided by TradingView widget - endpoint removed
+
 
 
 // Vercel Serverless Function export
