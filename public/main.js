@@ -616,13 +616,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const marketList = document.getElementById('market-list');
         const papersList = document.getElementById('papers-list');
 
-        // Stock symbols with fallback data (Feb 2026 estimates)
+        // Stock symbols with REAL fallback data (Feb 7, 2026)
         const stocks = [
-            { symbol: 'NVDA', name: 'NVIDIA', fallback: { price: 138.25, change: 2.15, percent: 1.58 } },
-            { symbol: 'MSFT', name: 'Microsoft', fallback: { price: 425.89, change: -1.23, percent: -0.29 } },
-            { symbol: 'GOOGL', name: 'Alphabet', fallback: { price: 175.32, change: 3.45, percent: 2.01 } },
-            { symbol: 'AAPL', name: 'Apple', fallback: { price: 232.15, change: 1.87, percent: 0.81 } },
-            { symbol: 'TSLA', name: 'Tesla', fallback: { price: 385.42, change: -5.23, percent: -1.34 } }
+            { symbol: 'NVDA', name: 'NVIDIA', fallback: { price: 185.40, change: 13.77, percent: 8.01 } },
+            { symbol: 'MSFT', name: 'Microsoft', fallback: { price: 401.14, change: -2.45, percent: -0.61 } },
+            { symbol: 'GOOGL', name: 'Alphabet', fallback: { price: 322.86, change: 4.55, percent: 1.43 } },
+            { symbol: 'AAPL', name: 'Apple', fallback: { price: 278.12, change: 2.21, percent: 0.80 } },
+            { symbol: 'TSLA', name: 'Tesla', fallback: { price: 411.11, change: -8.90, percent: -2.12 } }
         ];
 
         // Load stock data with fallback
@@ -1052,6 +1052,21 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('keydown', e => { keys[e.key] = true; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) && activeTab === 'minigame') e.preventDefault(); });
     window.addEventListener('keyup', e => keys[e.key] = false);
     startStrikerBtn?.addEventListener('click', initStriker);
+
+    // Auto-pause game when tab is hidden
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && gameActive) {
+            gameActive = false;
+            if (strikerMsg && strikerMsgText) {
+                strikerMsgText.textContent = '일시정지 ⏸️';
+                strikerMsg.style.display = 'block';
+            }
+        } else if (!document.hidden && !gameActive && player) {
+            strikerMsg.style.display = 'none';
+            gameActive = true;
+            requestAnimationFrame(strikerLoop);
+        }
+    });
 
     // Global cursor tracking
     document.addEventListener('mousemove', e => {
