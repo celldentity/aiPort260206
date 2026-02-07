@@ -1,7 +1,17 @@
 // [v61] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
-    // Purge old snake data to prevent ghosting
-    localStorage.removeItem('aura_snake_high');
+    // AGGRESSIVE CACHE CLEARING - v61
+    const CURRENT_VERSION = 'v61';
+    const storedVersion = localStorage.getItem('app_version');
+
+    if (storedVersion !== CURRENT_VERSION) {
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem('app_version', CURRENT_VERSION);
+        console.log('🧹 Cleared cache! Reloading v61...');
+        setTimeout(() => location.reload(true), 100);
+        return;
+    }
 
     // Auth & Elements
     const loginForm = document.getElementById('login-form');
