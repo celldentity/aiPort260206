@@ -173,6 +173,46 @@ app.get('/api/coding', (req, res) => handleNotionRequest(req, res, CODING_DB_ID,
     ]
 }));
 
+/**
+ * 4. AI Insights (ArXiv & Market)
+ */
+app.get('/api/insights/papers', async (req, res) => {
+    try {
+        const response = await fetch('https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=5');
+        const xml = await response.text();
+
+        const entries = [];
+        const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+        let match;
+
+        while ((match = entryRegex.exec(xml)) !== null) {
+            const content = match[1];
+            const title = (content.match(/<title>([\s\S]*?)<\/title>/) || [])[1]?.trim().replace(/\s+/g, ' ');
+            const summary = (content.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1]?.trim().replace(/\s+/g, ' ');
+            const link = (content.match(/<link[^>]+href=["']([^"']+)["']/) || [])[1];
+            const published = (content.match(/<published>([\s\S]*?)<\/published>/) || [])[1];
+
+            if (title && link) {
+                entries.push({ title, summary: summary ? summary.substring(0, 200) + '...' : '', link, published });
+            }
+        }
+        res.json(entries);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/insights/market', (req, res) => {
+    // Simulated real-time-like data for demonstration
+    // In production, integrate with Alpha Vantage or Finnhub
+    const stocks = [
+        { symbol: 'NVDA', name: 'NVIDIA', price: 135.22, change: 2.45, percent: 1.84 },
+        { symbol: 'MSFT', name: 'Microsoft', price: 412.15, change: -1.20, percent: -0.29 },
+        { symbol: 'GOOGL', name: 'Alphabet', price: 154.88, change: 0.95, percent: 0.62 },
+        { symbol: 'AMD', name: 'AMD', price: 178.45, change: 3.10, percent: 1.77 },
+        { symbol: 'TSLA', name: 'Tesla', price: 185.30, change: -2.15, percent: -1.15 }
+    ];
+    res.json(stocks);
+});
+
 
 // Vercel Serverless Function export
 module.exports = app;

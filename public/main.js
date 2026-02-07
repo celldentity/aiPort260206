@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginScreen.style.display = 'none'; appContainer.style.display = 'block'; body.classList.replace('initial-state', 'logged-in');
             updateSettingsUI(); loadGuestbook();
             setSearchLoading(true);
+            loadAIInsights(); // [v57] Load AI Papers & Market Data
 
             // 데이터 로딩 전략 (v48 + v53 Preview)
             backgroundFullLoad('cars');
@@ -441,17 +442,46 @@ document.addEventListener('DOMContentLoaded', () => {
         const messages = JSON.parse(localStorage.getItem('aura_guestbook') || '[]');
         if (!gbList) return;
         gbList.innerHTML = messages.length ? '' : '<p class="no-results-msg">첫 인사를 남겨주세요! 😊</p>';
-        messages.reverse().forEach(msg => {
+        messages.slice().reverse().forEach((msg, index) => {
+            const originalIndex = messages.length - 1 - index;
             const div = document.createElement('div'); div.className = 'guest-item';
-            div.innerHTML = `<div class="guest-meta"><span class="guest-name">${msg.name}</span><span class="guest-date">${msg.date}</span></div><div class="guest-text">${msg.text}</div>`;
+            const isOwner = currentUser && (msg.username === currentUser.username);
+            div.innerHTML = `
+                <div class="guest-meta">
+                    <span class="guest-name">${msg.name}</span>
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <span class="guest-date">${msg.date}</span>
+                        ${isOwner ? `<button class="gb-delete-btn" data-index="${originalIndex}"><ion-icon name="close-outline"></ion-icon></button>` : ''}
+                    </div>
+                </div>
+                <div class="guest-text">${msg.text}</div>
+            `;
             gbList.appendChild(div);
+        });
+
+        // Add delete event listeners
+        document.querySelectorAll('.gb-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                if (confirm('이 방명록을 삭제할까요?')) {
+                    const msgs = JSON.parse(localStorage.getItem('aura_guestbook') || '[]');
+                    msgs.splice(idx, 1);
+                    localStorage.setItem('aura_guestbook', JSON.stringify(msgs));
+                    loadGuestbook();
+                }
+            });
         });
     }
 
     gbSubmit?.addEventListener('click', () => {
         const text = gbInput.value.trim(); if (!text || text.length > 200) return alert(text ? '200자 이내로 써주세요! 🌸' : '내용을 입력해주세요! ✍️');
         const messages = JSON.parse(localStorage.getItem('aura_guestbook') || '[]');
-        messages.push({ name: currentUser.name, text, date: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) });
+        messages.push({
+            name: currentUser.name,
+            username: currentUser.username,
+            text,
+            date: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        });
         localStorage.setItem('aura_guestbook', JSON.stringify(messages));
         gbInput.value = ''; loadGuestbook();
     });
@@ -517,6 +547,51 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalBody) modalBody.scrollTop = 0;
             if (modal) modal.scrollTop = 0;
         }, 10);
+    }
+
+    // --- AI Insights System (v57) ---
+    async function loadAIInsights() {
+        const marketList = document.getElementById('market-list');
+        const papersList = document.getElementById('papers-list');
+
+        // 1. Load Market Data
+        try {
+            const mResp = await fetch('/api/insights/market');
+            const stocks = await mResp.json();
+            if (marketList && Array.isArray(stocks)) {
+                marketList.innerHTML = stocks.map(s => `
+                    <div class="market-item">
+                        <div class="market-info-left">
+                            <span class="market-symbol">${s.symbol}</span>
+                            <span class="market-name">${s.name}</span>
+                        </div>
+                        <div class="market-info-right">
+                            <div class="market-price">$${s.price.toFixed(2)}</div>
+                            <div class="market-change ${s.change >= 0 ? 'up' : 'down'}">
+                                ${s.change >= 0 ? '▲' : '▼'} ${Math.abs(s.percent).toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) { console.error('Market load failed', e); }
+
+        // 2. Load ArXiv Papers
+        try {
+            const pResp = await fetch('/api/insights/papers');
+            const papers = await pResp.json();
+            if (papersList && Array.isArray(papers)) {
+                papersList.innerHTML = papers.map(p => `
+                    <a href="${p.link}" target="_blank" class="paper-item">
+                        <span class="paper-date">${new Date(p.published).toLocaleDateString()}</span>
+                        <h5>${p.title}</h5>
+                        <p style="font-size:0.75rem; opacity:0.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${p.summary}</p>
+                    </a>
+                `).join('');
+            }
+        } catch (e) {
+            if (papersList) papersList.innerHTML = '<p class="loading-msg">논문을 가져오지 못했습니다. 😢</p>';
+        }
     }
 
     // 팝업 바깥(백그라운드) 클릭 시 닫기
