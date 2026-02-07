@@ -1087,7 +1087,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    startTetrisBtn?.addEventListener('click', initTetris);
+    console.log('Tetris Logic Loaded');
+    if (startTetrisBtn) {
+        console.log('Tetris Start Button Found');
+        startTetrisBtn.addEventListener('click', () => {
+            console.log('Tetris Start Clicked');
+            initTetris();
+        });
+    } else {
+        console.error('Tetris Start Button NOT Found');
+    }
 
     // Auto-pause when tab hidden or menu switched
     document.addEventListener('visibilitychange', () => {
