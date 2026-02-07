@@ -97,6 +97,10 @@
                     <ion-icon name="car-sport-outline"></ion-icon>
                     <span>Car Curation</span>
                 </button>
+                <button class="nav-item" data-tab="minigame">
+                    <ion-icon name="rocket-outline"></ion-icon>
+                    <span>Mini Game</span>
+                </button>
                 <button class="nav-item" data-tab="settings">
                     <ion-icon name="settings-outline"></ion-icon>
                     <span>Settings</span>
@@ -137,16 +141,6 @@
                             </div>
                             <div id="market-list" class="market-ticker scrollable-market">
                                 <p class="loading-msg">데이터를 가져오는 중... 📈</p>
-                            </div>
-                        </div>
-
-                        <!-- [v58] Fun Zone Button -->
-                        <div class="fun-zone-card glass-card selectable" id="btn-open-game">
-                            <div class="fun-glow"></div>
-                            <ion-icon name="game-controller-outline"></ion-icon>
-                            <div class="fun-text">
-                                <h3>심심풀이</h3>
-                                <p>Aura Snake에서 최고 기록에 도전하세요! 🐍</p>
                             </div>
                         </div>
                     </aside>
@@ -373,6 +367,44 @@
                     </div>
                 </div>
             </section>
+
+            <!-- [v59] Mini Game Section (Aura Striker) -->
+            <section id="game-section" class="tab-content" style="display: none;">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>Aura Striker</span></h2>
+                        <h3>은하계를 위협에서 지켜내세요! 총 5개의 스테이지가 기다립니다. 🚀</h3>
+                    </div>
+                </header>
+
+                <div class="game-view-container glass-card">
+                    <div id="striker-landing" class="game-ui-overlay">
+                        <div class="striker-intro">
+                            <h1>AURA STRIKER</h1>
+                            <p>화살표 키로 이동, Space 키로 발사!</p>
+                            <button id="btn-striker-start" class="btn-striker">MISSION START</button>
+                        </div>
+                    </div>
+
+                    <div id="striker-hud" class="game-hud" style="display:none;">
+                        <div class="hud-top">
+                            <div class="hud-stat">STAGE <span id="striker-stage">1</span></div>
+                            <div class="hud-stat">SCORE <span id="striker-score">0</span></div>
+                        </div>
+                        <div class="hud-bottom">
+                            <div class="hp-bar-container">
+                                <div id="striker-hp-fill" class="hp-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="striker-message" class="game-message-overlay" style="display:none;">
+                        <h2 id="striker-msg-text">STAGE CLEAR</h2>
+                    </div>
+
+                    <canvas id="striker-canvas"></canvas>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -402,36 +434,7 @@
         </div>
     </div>
 
-    <!-- [v58] Aura Snake Modal -->
-    <div id="game-modal" class="modal">
-        <div class="modal-content game-modal-content glass-card">
-            <header class="modal-header">
-                <div class="header-titles">
-                    <h2>Aura Snake</h2>
-                    <p>화살표 키로 네온 먹이를 모으세요! ⚡</p>
-                </div>
-                <button class="close-btn" id="close-game-modal"><ion-icon name="close-outline"></ion-icon></button>
-            </header>
-            <div class="game-container">
-                <div class="game-stats">
-                    <span id="game-score">Score: 0</span>
-                    <span id="game-high-score">High Score: 0</span>
-                </div>
-                <div class="canvas-wrapper">
-                    <canvas id="game-canvas" width="400" height="400"></canvas>
-                    <div id="game-overlay" class="game-overlay">
-                        <button id="btn-start-game">Game Start</button>
-                        <p id="game-over-text" style="display:none;">GAME OVER</p>
-                    </div>
-                </div>
-            </div>
-            <div class="game-controls-info">
-                <span><ion-icon name="arrow-up-outline"></ion-icon><ion-icon
-                        name="arrow-down-outline"></ion-icon><ion-icon name="arrow-back-outline"></ion-icon><ion-icon
-                        name="arrow-forward-outline"></ion-icon> 방향키로 조종</span>
-            </div>
-        </div>
-    </div>
+
 
     <script src="main.js" defer></script>
 </body>

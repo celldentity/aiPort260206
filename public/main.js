@@ -383,7 +383,32 @@ document.addEventListener('DOMContentLoaded', () => {
         activeTab = tabId; sessionStorage.setItem('aura_active_tab', tabId);
         if (updateHash) location.hash = tabId;
         document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.getAttribute('data-tab') === tabId));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
+
+        // Tab Content Switching
+        const sections = {
+            'home': 'home-container',
+            'news': 'news-section',
+            'coding': 'coding-section',
+            'recipe': 'recipe-section',
+            'gallery': 'car-section',
+            'minigame': 'game-section',
+            'settings': 'settings-section'
+        };
+
+        Object.values(sections).forEach(sid => {
+            const el = document.getElementById(sid);
+            if (el) el.style.display = 'none';
+        });
+
+        const activeSectionId = sections[tabId];
+        if (activeSectionId) {
+            const activeEl = document.getElementById(activeSectionId);
+            if (activeEl) {
+                activeEl.style.display = 'block';
+                activeEl.classList.add('active');
+            }
+        }
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         const gridId = tabId === 'gallery' ? 'gallery-grid' : tabId === 'recipe' ? 'recipe-grid' : tabId === 'news' ? 'news-grid' : tabId === 'coding' ? 'coding-grid' : null;
@@ -604,155 +629,176 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Aura Snake Game Logic (v58) ---
-    const gameModal = document.getElementById('game-modal');
-    const openGameBtn = document.getElementById('btn-open-game');
-    const closeGameBtn = document.getElementById('close-game-modal');
-    const gameCanvas = document.getElementById('game-canvas');
-    const gameCtx = gameCanvas?.getContext('2d');
-    const startBtn = document.getElementById('btn-start-game');
-    const scoreEl = document.getElementById('game-score');
-    const highScoreEl = document.getElementById('game-high-score');
-    const gameOverlay = document.getElementById('game-overlay');
-    const gameOverText = document.getElementById('game-over-text');
+    // --- [v59] Aura Striker: Arcade Space Shooter Engine ---
+    const strikerCanvas = document.getElementById('striker-canvas');
+    const sCtx = strikerCanvas?.getContext('2d');
+    const startStrikerBtn = document.getElementById('btn-striker-start');
+    const strikerLanding = document.getElementById('striker-landing');
+    const strikerHUD = document.getElementById('striker-hud');
+    const strikerMsg = document.getElementById('striker-message');
+    const strikerMsgText = document.getElementById('striker-msg-text');
+    const strikerScoreEl = document.getElementById('striker-score');
+    const strikerStageEl = document.getElementById('striker-stage');
+    const strikerHPFill = document.getElementById('striker-hp-fill');
 
-    let snake = [], food = {}, direction = 'right', score = 0, highScore = localStorage.getItem('aura_snake_high') || 0, gameInterval;
-    const box = 20;
+    let gameActive = false, strikerScore = 0, strikerStage = 1, strikerHP = 100;
+    let player = null, enemies = [], bullets = [], enemyBullets = [], particlesArr = [];
+    let keys = {}, spawnTimer = 0, lastShotTime = 0;
 
-    highScoreEl.textContent = `High Score: ${highScore}`;
+    const STAGE_CONFIG = {
+        1: { enemySpeed: 1.5, spawnRate: 100, bulletSpeed: 4, boss: false },
+        2: { enemySpeed: 2.0, spawnRate: 80, bulletSpeed: 5, boss: false },
+        3: { enemySpeed: 2.5, spawnRate: 60, bulletSpeed: 6, boss: false },
+        4: { enemySpeed: 3.0, spawnRate: 50, bulletSpeed: 7, boss: false },
+        5: { enemySpeed: 3.5, spawnRate: 40, bulletSpeed: 8, boss: true }
+    };
 
-    function initGame() {
-        snake = [{ x: 10 * box, y: 10 * box }];
-        direction = 'right';
-        score = 0;
-        scoreEl.textContent = `Score: 0`;
-        gameOverText.style.display = 'none';
-        gameOverlay.style.display = 'none';
-        spawnFood();
-        if (gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(draw, 100);
-    }
-
-    function spawnFood() {
-        food = {
-            x: Math.floor(Math.random() * 19 + 1) * box,
-            y: Math.floor(Math.random() * 19 + 1) * box
-        };
-    }
-
-    function draw() {
-        if (!gameCtx || !gameCanvas) return;
-        gameCtx.fillStyle = '#0a0a0a';
-        gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-
-        // Grid lines (subtle)
-        gameCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-        for (let i = 0; i < gameCanvas.width; i += box) { gameCtx.beginPath(); gameCtx.moveTo(i, 0); gameCtx.lineTo(i, 400); gameCtx.stroke(); }
-        for (let i = 0; i < gameCanvas.height; i += box) { gameCtx.beginPath(); gameCtx.moveTo(0, i); gameCtx.lineTo(400, i); gameCtx.stroke(); }
-
-        for (let i = 0; i < snake.length; i++) {
-            gameCtx.fillStyle = i === 0 ? '#a5b4fc' : 'rgba(165, 180, 252, 0.5)';
-            gameCtx.fillRect(snake[i].x, snake[i].y, box, box);
-            gameCtx.strokeStyle = '#000';
-            gameCtx.strokeRect(snake[i].x, snake[i].y, box, box);
-            if (i === 0) { // Glow for head
-                gameCtx.shadowBlur = 15;
-                gameCtx.shadowColor = '#a5b4fc';
-            } else { gameCtx.shadowBlur = 0; }
-        }
-
-        gameCtx.fillStyle = '#ff4545';
-        gameCtx.shadowBlur = 20;
-        gameCtx.shadowColor = '#ff4545';
-        gameCtx.fillRect(food.x, food.y, box, box);
-        gameCtx.shadowBlur = 0;
-
-        let snakeX = snake[0].x;
-        let snakeY = snake[0].y;
-
-        if (direction === 'left') snakeX -= box;
-        if (direction === 'up') snakeY -= box;
-        if (direction === 'right') snakeX += box;
-        if (direction === 'down') snakeY += box;
-
-        if (snakeX === food.x && snakeY === food.y) {
-            score++;
-            scoreEl.textContent = `Score: ${score}`;
-            spawnFood();
-        } else {
-            snake.pop();
-        }
-
-        const newHead = { x: snakeX, y: snakeY };
-
-        if (snakeX < 0 || snakeX >= gameCanvas.width || snakeY < 0 || snakeY >= gameCanvas.height || collision(newHead, snake)) {
-            gameOver();
-            return;
-        }
-
-        snake.unshift(newHead);
-    }
-
-    function collision(head, array) {
-        for (let i = 0; i < array.length; i++) {
-            if (head.x === array[i].x && head.y === array[i].y) return true;
-        }
-        return false;
-    }
-
-    function gameOver() {
-        clearInterval(gameInterval);
-        gameOverText.style.display = 'block';
-        gameOverlay.style.display = 'flex';
-        startBtn.textContent = 'Retry';
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('aura_snake_high', highScore);
-            highScoreEl.textContent = `High Score: ${highScore}`;
+    class Entity {
+        constructor(x, y, w, h, color) { this.x = x; this.y = y; this.w = w; this.h = h; this.color = color; }
+        draw(ctx) {
+            ctx.fillStyle = this.color;
+            ctx.shadowBlur = 10; ctx.shadowColor = this.color;
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.shadowBlur = 0;
         }
     }
 
-    document.addEventListener('keydown', e => {
-        if (e.key === 'ArrowLeft' && direction !== 'right') direction = 'left';
-        else if (e.key === 'ArrowUp' && direction !== 'down') direction = 'up';
-        else if (e.key === 'ArrowRight' && direction !== 'left') direction = 'right';
-        else if (e.key === 'ArrowDown' && direction !== 'up') direction = 'down';
-
-        // Prevent scrolling with arrows while playing
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) && gameModal.classList.contains('active')) {
-            e.preventDefault();
+    class Player extends Entity {
+        constructor() { super(450, 400, 40, 40, '#a5b4fc'); this.speed = 6; }
+        draw(ctx) {
+            ctx.save(); ctx.translate(this.x + 20, this.y + 20);
+            ctx.strokeStyle = this.color; ctx.lineWidth = 3; ctx.shadowBlur = 15; ctx.shadowColor = this.color;
+            ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 10); ctx.lineTo(0, 5); ctx.lineTo(-15, 10); ctx.closePath(); ctx.stroke();
+            // Thruster
+            ctx.fillStyle = '#6366f1'; ctx.beginPath(); ctx.arc(0, 15, 5 + Math.random() * 5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
         }
-    });
+        update() {
+            if (keys['ArrowUp'] && this.y > 0) this.y -= this.speed;
+            if (keys['ArrowDown'] && this.y < 500 - 40) this.y += this.speed;
+            if (keys['ArrowLeft'] && this.x > 0) this.x -= this.speed;
+            if (keys['ArrowRight'] && this.x < 900 - 40) this.x += this.speed;
+            if (keys[' '] && Date.now() - lastShotTime > 200) { this.shoot(); lastShotTime = Date.now(); }
+        }
+        shoot() { bullets.push(new Bullet(this.x + 18, this.y, -10, '#fff')); }
+    }
 
-    openGameBtn?.addEventListener('click', () => {
-        gameModal.classList.add('active');
-        body.style.overflow = 'hidden';
-    });
+    class Enemy extends Entity {
+        constructor(isBoss = false) {
+            super(Math.random() * 850, -50, isBoss ? 120 : 30, isBoss ? 80 : 30, isBoss ? '#f43f5e' : '#fb923c');
+            this.isBoss = isBoss; this.hp = isBoss ? 50 : 1; this.speed = STAGE_CONFIG[strikerStage].enemySpeed;
+            this.vx = isBoss ? 2 : 0;
+        }
+        draw(ctx) {
+            ctx.save(); ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+            ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.shadowBlur = 10; ctx.shadowColor = this.color;
+            if (!this.isBoss) {
+                ctx.beginPath(); ctx.moveTo(0, 15); ctx.lineTo(-15, -10); ctx.lineTo(15, -10); ctx.closePath(); ctx.stroke();
+            } else {
+                ctx.beginPath(); ctx.moveTo(-60, -20); ctx.lineTo(60, -20); ctx.lineTo(40, 40); ctx.lineTo(-40, 40); ctx.closePath(); ctx.stroke();
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill(); // Core
+            }
+            ctx.restore();
+        }
+        update() {
+            this.y += this.isBoss ? 0.3 : this.speed;
+            if (this.isBoss) { this.x += this.vx; if (this.x < 0 || this.x > 780) this.vx *= -1; }
+            if (Math.random() < 0.02) this.shoot();
+        }
+        shoot() { enemyBullets.push(new Bullet(this.x + this.w / 2 - 2, this.y + this.h, STAGE_CONFIG[strikerStage].bulletSpeed, this.color)); }
+    }
 
-    closeGameBtn?.addEventListener('click', () => {
-        gameModal.classList.remove('active');
-        body.style.overflow = 'auto';
-        clearInterval(gameInterval);
-    });
+    class Bullet extends Entity {
+        constructor(x, y, vy, color) { super(x, y, 4, 15, color); this.vy = vy; }
+        update() { this.y += this.vy; }
+    }
 
-    startBtn?.addEventListener('click', initGame);
+    function initStriker() {
+        strikerCanvas.width = 900; strikerCanvas.height = 500;
+        player = new Player(); enemies = []; bullets = []; enemyBullets = []; particlesArr = [];
+        strikerScore = 0; strikerStage = 1; strikerHP = 100; gameActive = true;
+        strikerLanding.style.display = 'none'; strikerHUD.style.display = 'block';
+        updateHUD(); requestAnimationFrame(strikerLoop);
+    }
 
-    // 팝업 바깥(백그라운드) 클릭 시 닫기 (Updated to handle game modal)
-    [modal, searchModal, gameModal].forEach(m => {
-        m?.addEventListener('click', (e) => {
-            if (e.target === m) {
-                m.classList.remove('active');
-                body.style.overflow = 'auto';
-                if (m === gameModal) clearInterval(gameInterval);
+    function updateHUD() {
+        strikerScoreEl.textContent = strikerScore; strikerStageEl.textContent = strikerStage;
+        strikerHPFill.style.width = `${strikerHP}%`;
+    }
+
+    function showMsg(txt, callback) {
+        strikerMsgText.textContent = txt; strikerMsg.style.display = 'block';
+        setTimeout(() => { strikerMsg.style.display = 'none'; if (callback) callback(); }, 2000);
+    }
+
+    function strikerLoop() {
+        if (!gameActive) return;
+        sCtx.fillStyle = 'rgba(5, 5, 5, 0.4)'; sCtx.fillRect(0, 0, 900, 500);
+        // Galaxy Stars Background
+        sCtx.fillStyle = '#fff'; for (let i = 0; i < 3; i++) sCtx.fillRect(Math.random() * 900, Math.random() * 500, 1, 1);
+
+        player.update(); player.draw(sCtx);
+
+        spawnTimer++;
+        const cfg = STAGE_CONFIG[strikerStage];
+        if (spawnTimer > cfg.spawnRate && enemies.length < 10) {
+            if (!cfg.boss || (cfg.boss && enemies.filter(e => e.isBoss).length === 0)) {
+                enemies.push(new Enemy(cfg.boss && strikerScore >= 20 * strikerStage));
+            }
+            spawnTimer = 0;
+        }
+
+        bullets.forEach((b, bi) => {
+            b.update(); b.draw(sCtx);
+            if (b.y < -20) bullets.splice(bi, 1);
+            enemies.forEach((e, ei) => {
+                if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+                    bullets.splice(bi, 1); e.hp--; strikerScore += 10; updateHUD();
+                    if (e.hp <= 0) { enemies.splice(ei, 1); createExplosion(e.x + e.w / 2, e.y + e.h / 2); if (e.isBoss) nextStage(); }
+                }
+            });
+        });
+
+        enemyBullets.forEach((eb, ebi) => {
+            eb.update(); eb.draw(sCtx);
+            if (eb.y > 520) enemyBullets.splice(ebi, 1);
+            if (eb.x < player.x + player.w && eb.x + eb.w > player.x && eb.y < player.y + player.h && eb.y + eb.h > player.y) {
+                enemyBullets.splice(ebi, 1); strikerHP -= 10; updateHUD();
+                if (strikerHP <= 0) strikerGameOver();
             }
         });
-    });
-    document.addEventListener('mousemove', e => {
-        if (auraCursor) { auraCursor.style.left = `${e.clientX}px`; auraCursor.style.top = `${e.clientY}px`; }
-        document.querySelectorAll('.gallery-item').forEach(c => {
-            const r = c.getBoundingClientRect();
-            c.style.setProperty('--mouseX', `${e.clientX - r.left}px`);
-            c.style.setProperty('--mouseY', `${e.clientY - r.top}px`);
+
+        enemies.forEach((e, ei) => {
+            e.update(); e.draw(sCtx);
+            if (e.y > 550) enemies.splice(ei, 1);
+            if (e.x < player.x + player.w && e.x + e.w > player.x && e.y < player.y + player.h && e.y + e.h > player.y) {
+                enemies.splice(ei, 1); strikerHP -= 20; updateHUD();
+                if (strikerHP <= 0) strikerGameOver();
+            }
         });
-    });
+
+        if (!cfg.boss && strikerScore >= 100 * strikerStage) nextStage();
+
+        requestAnimationFrame(strikerLoop);
+    }
+
+    function createExplosion(x, y) {
+        for (let i = 0; i < 10; i++) particlesArr.push({ x, y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10, life: 1, c: '#fb923c' });
+    }
+
+    function nextStage() {
+        if (strikerStage === 5) { gameActive = false; showMsg("MISSION COMPLETE! 🎉", () => location.reload()); return; }
+        strikerStage++; enemies = []; bullets = []; enemyBullets = [];
+        showMsg(`STAGE ${strikerStage} START`, () => { });
+    }
+
+    function strikerGameOver() {
+        gameActive = false; showMsg("GAME OVER 💀", () => { strikerLanding.style.display = 'flex'; strikerHUD.style.display = 'none'; });
+    }
+
+    window.addEventListener('keydown', e => { keys[e.key] = true; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) && activeTab === 'minigame') e.preventDefault(); });
+    window.addEventListener('keyup', e => keys[e.key] = false);
+    startStrikerBtn?.addEventListener('click', initStriker);
+
+});
 });

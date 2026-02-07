@@ -990,149 +990,159 @@ main {
     background: rgba(255, 255, 255, 0.05);
 }
 
-/* [v58] Fun Zone Card */
-.fun-zone-card {
-    margin-top: 2rem;
-    padding: 1.5rem !important;
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
+/* [v59] Aura Striker Styles */
+.game-view-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 2rem auto;
+    aspect-ratio: 16 / 9;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(var(--aura-1-rgb), 0.2) !important;
+    padding: 0 !important;
+    background: #050505;
+    border: 1px solid rgba(var(--aura-1-rgb), 0.3) !important;
+    border-radius: 1.5rem;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
 }
 
-.fun-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-100%, -100%);
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(var(--aura-1-rgb), 0.15) 0%, transparent 70%);
-    pointer-events: none;
-    animation: rotateGlow 10s linear infinite;
-}
-
-@keyframes rotateGlow {
-    from {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-
-    to {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
-}
-
-.fun-zone-card ion-icon {
-    font-size: 2.2rem;
-    color: var(--aura-1);
-}
-
-.fun-text h3 {
-    font-size: 1.1rem;
-    font-weight: 800;
-    margin-bottom: 0.2rem;
-}
-
-.fun-text p {
-    font-size: 0.75rem;
-    opacity: 0.6;
-}
-
-/* [v58] Game Modal Styles */
-.game-modal-content {
-    max-width: 480px !important;
-    padding: 2.5rem !important;
-}
-
-.game-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    margin-top: 1rem;
-}
-
-.game-stats {
+#striker-canvas {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--aura-1);
-}
-
-.canvas-wrapper {
-    position: relative;
-    background: rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    line-height: 0;
-}
-
-#game-canvas {
+    height: 100%;
     display: block;
-    border-radius: 0.8rem;
 }
 
-.game-overlay {
+.game-ui-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.striker-intro h1 {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: 0.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(to bottom, #fff, var(--aura-1));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 20px rgba(var(--aura-1-rgb), 0.5));
+}
+
+.striker-intro p {
+    font-size: 1.1rem;
+    opacity: 0.7;
+    margin-bottom: 2.5rem;
+}
+
+.btn-striker {
+    background: var(--aura-1);
+    color: white;
+    border: none;
+    padding: 1.2rem 3rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.1rem;
+    border-radius: 1rem;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 0 20px rgba(var(--aura-1-rgb), 0.3);
+}
+
+.btn-striker:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 15px 30px rgba(var(--aura-1-rgb), 0.5);
+    filter: brightness(1.2);
+}
+
+/* HUD Styles */
+.game-hud {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0.8rem;
-    z-index: 10;
+    padding: 1.5rem 2rem;
+    z-index: 90;
+    pointer-events: none;
 }
 
-#btn-start-game {
-    background: var(--aura-1);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
+.hud-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-heading);
     font-weight: 800;
-    border-radius: 0.8rem;
-    cursor: pointer;
-    font-family: var(--font-heading);
-    transition: 0.3s;
+    font-size: 1.4rem;
+    color: var(--aura-1);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
-#btn-start-game:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 15px var(--aura-1);
+.hud-stat span {
+    color: white;
+    margin-left: 0.5rem;
 }
 
-#game-over-text {
-    font-family: var(--font-heading);
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: #ff4545;
-    margin-bottom: 1.5rem;
-    text-shadow: 0 0 15px rgba(255, 69, 69, 0.6);
+.hud-bottom {
+    margin-top: 1rem;
+    width: 200px;
 }
 
-.game-controls-info {
-    margin-top: 2rem;
+.hp-bar-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hp-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff4545, #ff7b7b);
+    box-shadow: 0 0 10px #ff4545;
+    transition: width 0.3s ease;
+}
+
+/* Message Overlay */
+.game-message-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 95;
     text-align: center;
-    font-size: 0.85rem;
-    opacity: 0.5;
+    pointer-events: none;
 }
 
-.game-controls-info span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+.game-message-overlay h2 {
+    font-family: var(--font-heading);
+    font-size: 5rem;
+    font-weight: 900;
+    color: white;
+    margin: 0;
+    animation: msgScale 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    text-shadow: 0 0 30px rgba(var(--aura-1-rgb), 0.8);
+}
+
+@keyframes msgScale {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* Guestbook Sidebar */
