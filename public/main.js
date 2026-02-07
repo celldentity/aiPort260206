@@ -1136,8 +1136,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Notify user of update
+    const versionDiv = document.createElement('div');
+    versionDiv.style.position = 'fixed';
+    versionDiv.style.top = '0';
+    versionDiv.style.left = '0';
+    versionDiv.style.width = '100%';
+    versionDiv.style.backgroundColor = 'red';
+    versionDiv.style.color = 'white';
+    versionDiv.style.textAlign = 'center';
+    versionDiv.style.zIndex = '99999';
+    versionDiv.style.padding = '10px';
+    versionDiv.textContent = 'SYSTEM: TETRIS VERSION LOADED SUCCESSFULLY';
+    document.body.prepend(versionDiv);
+
     setTimeout(() => {
+        versionDiv.remove();
         console.log('Tetris Update Alert Triggered');
         alert('테트리스 업데이트 완료! 🎮\n확인 버튼을 누르면 게임을 즐길 수 있습니다.');
-    }, 500);
+    }, 1000);
 });
