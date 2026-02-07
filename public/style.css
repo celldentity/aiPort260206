@@ -990,59 +990,6 @@ main {
     background: rgba(255, 255, 255, 0.05);
 }
 
-.striker-intro p {
-    font-size: 1.1rem;
-    opacity: 0.7;
-    margin-bottom: 2.5rem;
-}
-
-.btn-striker {
-    background: var(--aura-1);
-    color: white;
-    border: none;
-    padding: 1.2rem 3rem;
-    font-size: 1.2rem;
-    font-weight: 800;
-    letter-spacing: 0.1rem;
-    border-radius: 1rem;
-    cursor: pointer;
-    font-family: var(--font-heading);
-    transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 0 20px rgba(var(--aura-1-rgb), 0.3);
-}
-
-.btn-striker:hover {
-    transform: scale(1.05) translateY(-5px);
-    box-shadow: 0 15px 30px rgba(var(--aura-1-rgb), 0.5);
-    filter: brightness(1.2);
-}
-
-/* HUD Styles */
-.game-hud {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 1.5rem 2rem;
-    z-index: 90;
-    pointer-events: none;
-}
-
-.hud-top {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 1.4rem;
-    color: var(--aura-1);
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.hud-stat span {
-    color: white;
-    margin-left: 0.5rem;
-}
-
 .hud-bottom {
     margin-top: 1rem;
     width: 200px;
