@@ -112,18 +112,45 @@
         <main id="content">
             <!-- Home Section -->
             <section id="home" class="tab-content active">
-                <div class="home-layout">
-                    <!-- Left: Hero & Notice -->
+                <div class="home-layout side-left">
+                    <!-- Left: Guestbook & Market Sidebar -->
+                    <aside class="home-sidebar">
+                        <div class="guestbook-container glass-card">
+                            <div class="guestbook-header">
+                                <ion-icon name="chatbubbles-outline"></ion-icon>
+                                <h3>아무말대잔치</h3>
+                            </div>
+                            <div class="guestbook-list" id="guestbook-list">
+                                <!-- 방명록 메시지들이 여기에 로드됩니다 -->
+                            </div>
+                            <div class="guestbook-input-area">
+                                <textarea id="guestbook-input" placeholder="인삿말을 남겨주세요 (최대 200자)"
+                                    maxlength="200"></textarea>
+                                <button id="guestbook-submit">기록하기</button>
+                            </div>
+                        </div>
+
+                        <div class="insights-market-card glass-card">
+                            <div class="insights-header">
+                                <ion-icon name="trending-up-outline"></ion-icon>
+                                <h4>AI 시장 현황</h4>
+                            </div>
+                            <div id="market-list" class="market-ticker">
+                                <p class="loading-msg">데이터를 가져오는 중... 📈</p>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Right: Hero & Dashboard -->
                     <div class="home-main">
                         <header class="hero">
                             <h2 class="reveal-text">대보정보통신<br><span class="gradient-text">AIX 2026 Gallery</span></h2>
                             <p class="subtitle">맨땅에 헤딩하는 AI시대 새싹 코더를 위한 공간</p>
 
-                            <!-- AI Service Notice Badge -->
                             <div class="ai-notice-box glass-card">
                                 <ion-icon name="sparkles-outline"></ion-icon>
                                 <span>본 서비스의 뉴스, 레시피, 카 큐레이션은 <strong>AI가 직접 이미지를 생성하고 본문 내용을 선별</strong>하였습니다.<br>
-                                    컨텐츠가 로딩되는데 시간이 조금 걸려요 검색창의 로딩중이 끝나면 원활히 이용할 수 있어요! 🤷‍♂️</span>
+                                    컨텐츠가 로딩되는데 시간이 조금 걸려요! 🤷‍♂️</span>
                             </div>
                         </header>
 
@@ -164,15 +191,6 @@
                             </div>
 
                             <div class="ai-insights-col">
-                                <div class="insights-market-card glass-card">
-                                    <div class="insights-header">
-                                        <ion-icon name="trending-up-outline"></ion-icon>
-                                        <h4>AI 시장 현황</h4>
-                                    </div>
-                                    <div id="market-list" class="market-ticker">
-                                        <p class="loading-msg">데이터를 가져오는 중... 📈</p>
-                                    </div>
-                                </div>
                                 <div class="insights-papers-card glass-card">
                                     <div class="insights-header">
                                         <ion-icon name="book-outline"></ion-icon>
@@ -185,24 +203,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Right: Guestbook Sidebar -->
-                    <aside class="home-sidebar">
-                        <div class="guestbook-container glass-card">
-                            <div class="guestbook-header">
-                                <ion-icon name="chatbubbles-outline"></ion-icon>
-                                <h3>아무말대잔치</h3>
-                            </div>
-                            <div class="guestbook-list" id="guestbook-list">
-                                <!-- 방명록 메시지들이 여기에 로드됩니다 -->
-                            </div>
-                            <div class="guestbook-input-area">
-                                <textarea id="guestbook-input" placeholder="인삿말을 남겨주세요 (최대 200자)"
-                                    maxlength="200"></textarea>
-                                <button id="guestbook-submit">기록하기</button>
-                            </div>
-                        </div>
-                    </aside>
                 </div>
             </section>
 

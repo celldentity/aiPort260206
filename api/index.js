@@ -219,11 +219,15 @@ app.get('/api/insights/market', (req, res) => {
     // Simulated real-time-like data for demonstration
     // In production, integrate with Alpha Vantage or Finnhub
     const stocks = [
+        // Global AI/Tech
         { symbol: 'NVDA', name: 'NVIDIA', price: 135.22, change: 2.45, percent: 1.84 },
         { symbol: 'MSFT', name: 'Microsoft', price: 412.15, change: -1.20, percent: -0.29 },
         { symbol: 'GOOGL', name: 'Alphabet', price: 154.88, change: 0.95, percent: 0.62 },
-        { symbol: 'AMD', name: 'AMD', price: 178.45, change: 3.10, percent: 1.77 },
-        { symbol: 'TSLA', name: 'Tesla', price: 185.30, change: -2.15, percent: -1.15 }
+        // Domestic Tech (KRW)
+        { symbol: '005930.KS', name: '삼성전자', price: 72400, change: 800, percent: 1.12 },
+        { symbol: '000660.KS', name: 'SK하이닉스', price: 185600, change: 4200, percent: 2.32 },
+        { symbol: '035420.KS', name: 'NAVER', price: 198500, change: -1500, percent: -0.75 },
+        { symbol: '035720.KS', name: '카카오', price: 54200, change: 300, percent: 0.56 }
     ];
     res.json(stocks);
 });
