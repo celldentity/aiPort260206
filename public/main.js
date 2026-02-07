@@ -1,4 +1,4 @@
-// [v60] Aura Arcade Engine & UI Fixes
+// [v61] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
     // Purge old snake data to prevent ghosting
     localStorage.removeItem('aura_snake_high');
