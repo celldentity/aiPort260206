@@ -135,8 +135,18 @@
                                 <ion-icon name="trending-up-outline"></ion-icon>
                                 <h4>AI 시장 현황</h4>
                             </div>
-                            <div id="market-list" class="market-ticker">
+                            <div id="market-list" class="market-ticker scrollable-market">
                                 <p class="loading-msg">데이터를 가져오는 중... 📈</p>
+                            </div>
+                        </div>
+
+                        <!-- [v58] Fun Zone Button -->
+                        <div class="fun-zone-card glass-card selectable" id="btn-open-game">
+                            <div class="fun-glow"></div>
+                            <ion-icon name="game-controller-outline"></ion-icon>
+                            <div class="fun-text">
+                                <h3>심심풀이</h3>
+                                <p>Aura Snake에서 최고 기록에 도전하세요! 🐍</p>
                             </div>
                         </div>
                     </aside>
@@ -144,7 +154,8 @@
                     <!-- Right: Hero & Dashboard -->
                     <div class="home-main">
                         <header class="hero">
-                            <h2 class="reveal-text">대보정보통신<br><span class="gradient-text">AIX 2026 Gallery</span></h2>
+                            <h2 class="reveal-text">MBC Arcademy<br><span class="gradient-text">AIX 2026 Gallery</span>
+                            </h2>
                             <p class="subtitle">맨땅에 헤딩하는 AI시대 새싹 코더를 위한 공간</p>
 
                             <div class="ai-notice-box glass-card">
@@ -223,7 +234,7 @@
                 <header class="gallery-header">
                     <div class="header-titles">
                         <h2><span>임베딩 자료실</span></h2>
-                        <h3>코더들에게 도움이 될 유튜브 임베드를 모아뒀어요.</h3>
+                        <h3>코더들에게 도움이 될 유튜브 임베드를 모아뒀어요😊</h3>
                     </div>
                 </header>
                 <div class="masonry-grid" id="coding-grid"></div>
@@ -388,6 +399,37 @@
                 <input type="text" id="mobile-search-input" placeholder="무엇을 찾고 싶으신가요?">
             </div>
             <p class="search-tip">입력 후 Enter를 눌러 검색하세요</p>
+        </div>
+    </div>
+
+    <!-- [v58] Aura Snake Modal -->
+    <div id="game-modal" class="modal">
+        <div class="modal-content game-modal-content glass-card">
+            <header class="modal-header">
+                <div class="header-titles">
+                    <h2>Aura Snake</h2>
+                    <p>화살표 키로 네온 먹이를 모으세요! ⚡</p>
+                </div>
+                <button class="close-btn" id="close-game-modal"><ion-icon name="close-outline"></ion-icon></button>
+            </header>
+            <div class="game-container">
+                <div class="game-stats">
+                    <span id="game-score">Score: 0</span>
+                    <span id="game-high-score">High Score: 0</span>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="game-canvas" width="400" height="400"></canvas>
+                    <div id="game-overlay" class="game-overlay">
+                        <button id="btn-start-game">Game Start</button>
+                        <p id="game-over-text" style="display:none;">GAME OVER</p>
+                    </div>
+                </div>
+            </div>
+            <div class="game-controls-info">
+                <span><ion-icon name="arrow-up-outline"></ion-icon><ion-icon
+                        name="arrow-down-outline"></ion-icon><ion-icon name="arrow-back-outline"></ion-icon><ion-icon
+                        name="arrow-forward-outline"></ion-icon> 방향키로 조종</span>
+            </div>
         </div>
     </div>
 

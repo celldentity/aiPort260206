@@ -549,30 +549,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     }
 
-    // --- AI Insights System (v57) ---
+    // --- AI Insights System (v58 Updated) ---
     async function loadAIInsights() {
         const marketList = document.getElementById('market-list');
         const papersList = document.getElementById('papers-list');
 
-        // 1. Load Market Data
+        // 1. Load Market Data (Expanding to US/KR top 5 each)
         try {
             const mResp = await fetch('/api/insights/market');
             const stocks = await mResp.json();
             if (marketList && Array.isArray(stocks)) {
-                marketList.innerHTML = stocks.map(s => `
+                const usStocks = stocks.filter(s => s.region === 'US');
+                const krStocks = stocks.filter(s => s.region === 'KR');
+
+                const renderStock = (s) => `
                     <div class="market-item">
                         <div class="market-info-left">
                             <span class="market-symbol">${s.symbol}</span>
                             <span class="market-name">${s.name}</span>
                         </div>
                         <div class="market-info-right">
-                            <div class="market-price">$${s.price.toFixed(2)}</div>
+                            <div class="market-price">${s.region === 'US' ? '$' : ''}${s.price.toLocaleString()}${s.region === 'KR' ? '원' : ''}</div>
                             <div class="market-change ${s.change >= 0 ? 'up' : 'down'}">
                                 ${s.change >= 0 ? '▲' : '▼'} ${Math.abs(s.percent).toFixed(2)}%
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `;
+
+                marketList.innerHTML = `
+                    <div class="market-region-header">US Tech Markets</div>
+                    ${usStocks.map(renderStock).join('')}
+                    <div class="market-region-header">KR Tech Markets</div>
+                    ${krStocks.map(renderStock).join('')}
+                `;
             }
         } catch (e) { console.error('Market load failed', e); }
 
@@ -594,12 +604,146 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 팝업 바깥(백그라운드) 클릭 시 닫기
-    [modal, searchModal].forEach(m => {
+    // --- Aura Snake Game Logic (v58) ---
+    const gameModal = document.getElementById('game-modal');
+    const openGameBtn = document.getElementById('btn-open-game');
+    const closeGameBtn = document.getElementById('close-game-modal');
+    const gameCanvas = document.getElementById('game-canvas');
+    const gameCtx = gameCanvas?.getContext('2d');
+    const startBtn = document.getElementById('btn-start-game');
+    const scoreEl = document.getElementById('game-score');
+    const highScoreEl = document.getElementById('game-high-score');
+    const gameOverlay = document.getElementById('game-overlay');
+    const gameOverText = document.getElementById('game-over-text');
+
+    let snake = [], food = {}, direction = 'right', score = 0, highScore = localStorage.getItem('aura_snake_high') || 0, gameInterval;
+    const box = 20;
+
+    highScoreEl.textContent = `High Score: ${highScore}`;
+
+    function initGame() {
+        snake = [{ x: 10 * box, y: 10 * box }];
+        direction = 'right';
+        score = 0;
+        scoreEl.textContent = `Score: 0`;
+        gameOverText.style.display = 'none';
+        gameOverlay.style.display = 'none';
+        spawnFood();
+        if (gameInterval) clearInterval(gameInterval);
+        gameInterval = setInterval(draw, 100);
+    }
+
+    function spawnFood() {
+        food = {
+            x: Math.floor(Math.random() * 19 + 1) * box,
+            y: Math.floor(Math.random() * 19 + 1) * box
+        };
+    }
+
+    function draw() {
+        if (!gameCtx || !gameCanvas) return;
+        gameCtx.fillStyle = '#0a0a0a';
+        gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+        // Grid lines (subtle)
+        gameCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        for (let i = 0; i < gameCanvas.width; i += box) { gameCtx.beginPath(); gameCtx.moveTo(i, 0); gameCtx.lineTo(i, 400); gameCtx.stroke(); }
+        for (let i = 0; i < gameCanvas.height; i += box) { gameCtx.beginPath(); gameCtx.moveTo(0, i); gameCtx.lineTo(400, i); gameCtx.stroke(); }
+
+        for (let i = 0; i < snake.length; i++) {
+            gameCtx.fillStyle = i === 0 ? '#a5b4fc' : 'rgba(165, 180, 252, 0.5)';
+            gameCtx.fillRect(snake[i].x, snake[i].y, box, box);
+            gameCtx.strokeStyle = '#000';
+            gameCtx.strokeRect(snake[i].x, snake[i].y, box, box);
+            if (i === 0) { // Glow for head
+                gameCtx.shadowBlur = 15;
+                gameCtx.shadowColor = '#a5b4fc';
+            } else { gameCtx.shadowBlur = 0; }
+        }
+
+        gameCtx.fillStyle = '#ff4545';
+        gameCtx.shadowBlur = 20;
+        gameCtx.shadowColor = '#ff4545';
+        gameCtx.fillRect(food.x, food.y, box, box);
+        gameCtx.shadowBlur = 0;
+
+        let snakeX = snake[0].x;
+        let snakeY = snake[0].y;
+
+        if (direction === 'left') snakeX -= box;
+        if (direction === 'up') snakeY -= box;
+        if (direction === 'right') snakeX += box;
+        if (direction === 'down') snakeY += box;
+
+        if (snakeX === food.x && snakeY === food.y) {
+            score++;
+            scoreEl.textContent = `Score: ${score}`;
+            spawnFood();
+        } else {
+            snake.pop();
+        }
+
+        const newHead = { x: snakeX, y: snakeY };
+
+        if (snakeX < 0 || snakeX >= gameCanvas.width || snakeY < 0 || snakeY >= gameCanvas.height || collision(newHead, snake)) {
+            gameOver();
+            return;
+        }
+
+        snake.unshift(newHead);
+    }
+
+    function collision(head, array) {
+        for (let i = 0; i < array.length; i++) {
+            if (head.x === array[i].x && head.y === array[i].y) return true;
+        }
+        return false;
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        gameOverText.style.display = 'block';
+        gameOverlay.style.display = 'flex';
+        startBtn.textContent = 'Retry';
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('aura_snake_high', highScore);
+            highScoreEl.textContent = `High Score: ${highScore}`;
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft' && direction !== 'right') direction = 'left';
+        else if (e.key === 'ArrowUp' && direction !== 'down') direction = 'up';
+        else if (e.key === 'ArrowRight' && direction !== 'left') direction = 'right';
+        else if (e.key === 'ArrowDown' && direction !== 'up') direction = 'down';
+
+        // Prevent scrolling with arrows while playing
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) && gameModal.classList.contains('active')) {
+            e.preventDefault();
+        }
+    });
+
+    openGameBtn?.addEventListener('click', () => {
+        gameModal.classList.add('active');
+        body.style.overflow = 'hidden';
+    });
+
+    closeGameBtn?.addEventListener('click', () => {
+        gameModal.classList.remove('active');
+        body.style.overflow = 'auto';
+        clearInterval(gameInterval);
+    });
+
+    startBtn?.addEventListener('click', initGame);
+
+    // 팝업 바깥(백그라운드) 클릭 시 닫기 (Updated to handle game modal)
+    [modal, searchModal, gameModal].forEach(m => {
         m?.addEventListener('click', (e) => {
             if (e.target === m) {
                 m.classList.remove('active');
                 body.style.overflow = 'auto';
+                if (m === gameModal) clearInterval(gameInterval);
             }
         });
     });
