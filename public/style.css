@@ -992,10 +992,10 @@ main {
 
 /* [v66] Tetris Styles */
 .game-view-container {
-    width: 100%;
-    max-width: 360px;
+    width: 100% !important;
+    max-width: 360px !important;
     margin: 2rem auto;
-    aspect-ratio: 1 / 2;
+    aspect-ratio: 1 / 2 !important;
     /* 300x600 */
     position: relative;
     overflow: hidden;

@@ -1134,4 +1134,10 @@ document.addEventListener('DOMContentLoaded', () => {
             c.style.setProperty('--mouseY', `${e.clientY - r.top}px`);
         });
     });
+
+    // Notify user of update
+    setTimeout(() => {
+        console.log('Tetris Update Alert Triggered');
+        // alert('테트리스 업데이트 완료! 🎮\n확인 버튼을 누르면 게임을 즐길 수 있습니다.');
+    }, 500);
 });
