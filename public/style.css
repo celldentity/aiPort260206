@@ -1784,6 +1784,95 @@ footer {
     /* Hide info on hover/grid for Idea Board */
 }
 
+/* [v82] URL Board Styles */
+.url-board-container {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 1.5rem;
+    border: 1px solid var(--glass-border);
+    margin-top: 1rem;
+}
+
+.url-board-header {
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 1.5fr;
+    padding: 1rem;
+    border-bottom: 2px solid var(--glass-border);
+    font-weight: 600;
+    color: var(--accent-light);
+    opacity: 0.8;
+}
+
+.url-board-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.url-item {
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 1.5fr;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
+    align-items: center;
+}
+
+.url-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.url-item .col-link a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    word-break: break-all;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.url-item .col-link a:hover {
+    text-decoration: underline;
+    opacity: 1;
+}
+
+.url-item .col-name {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.url-item .col-note {
+    font-size: 0.85rem;
+    opacity: 0.6;
+}
+
+/* Guestbook Delete Enhancement */
+.gb-delete-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.gb-delete-btn:hover {
+    color: #ff4b4b;
+}
+
+@media (max-width: 800px) {
+    .url-board-header {
+        display: none;
+    }
+
+    .url-item {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+}
+
+
 /* Hide title in Modal specifically for Idea Board */
 .modal-content.hide-title #modal-title {
     display: none;

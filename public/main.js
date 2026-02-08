@@ -448,56 +448,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Navigation ---
     function switchTab(tabId, updateHash = true) {
-        activeTab = tabId; sessionStorage.setItem('aura_active_tab', tabId);
-        if (updateHash) location.hash = tabId;
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.getAttribute('data-tab') === tabId));
+        if (currentUser) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const navItems = document.querySelectorAll('.nav-item');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            navItems.forEach(item => item.classList.remove('active'));
 
-        // Tab Content Switching
-        const sections = {
-            'home': 'home',
-            'news': 'news',
-            'coding': 'coding',
-            'recipe': 'recipe',
-            'gallery': 'gallery',
-            'idea': 'idea', // [v75]
-            'minigame': 'game-section',
-            'settings': 'settings',
-            'search-results': 'search-results'
-        };
+            const targetTab = document.getElementById(tabId) || document.getElementById(tabId + '-section'); // Fallback for ID inconsistencies
+            if (targetTab) {
+                targetTab.classList.add('active');
+                const navItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+                if (navItem) navItem.classList.add('active');
+                if (updateHash) location.hash = tabId;
 
-        Object.values(sections).forEach(sid => {
-            const el = document.getElementById(sid);
-            if (el) {
-                el.style.display = 'none';
-                el.classList.remove('active');
-            }
-        });
-
-        const activeSectionId = sections[tabId];
-        if (activeSectionId) {
-            const activeEl = document.getElementById(activeSectionId);
-            if (activeEl) {
-                activeEl.style.display = 'block';
-                activeEl.classList.add('active');
-            }
-        }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        const gridId = tabId === 'gallery' ? 'gallery-grid' : tabId === 'recipe' ? 'recipe-grid' : tabId === 'news' ? 'news-grid' : tabId === 'coding' ? 'coding-grid' : tabId === 'idea' ? 'idea-grid' : null;
-        if (gridId) {
-            const grid = document.getElementById(gridId);
-            if (grid && grid.children.length === 0) {
-                if (tabId === 'idea') {
-                    backgroundIdeaLoad();
-                } else {
-                    const data = tabId === 'gallery' ? allCars : tabId === 'recipe' ? allRecipes : tabId === 'news' ? allNews : allCoding;
-                    if (data.length > 0) appendData(data, gridId, tabId === 'news');
-                }
+                // Tab Special Logic
+                if (tabId === 'urls') loadUrlCollection();
+                if (tabId === 'news' && cursors.newsStart === 1) fetchNextNews();
+                if (tabId === 'coding') backgroundFullLoad('coding');
+                if (tabId === 'gallery') backgroundFullLoad('cars');
+                if (tabId === 'recipe') backgroundFullLoad('recipes');
+                if (tabId === 'idea') backgroundIdeaLoad();
             }
         }
     }
 
+    // [v82] URL Collection Loader
+    async function loadUrlCollection() {
+        const urlList = document.getElementById('url-list');
+        if (!urlList) return;
+        try {
+            const resp = await fetch('/api/urls');
+            const data = await resp.json();
+            urlList.innerHTML = '';
+            if (data.length === 0) {
+                urlList.innerHTML = '<p class="no-results-msg">아직 등록된 URL이 없습니다. 🔗</p>';
+                return;
+            }
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'url-item';
+                div.innerHTML = `
+                    <div class="col-name">${item.name}</div>
+                    <div class="col-link"><a href="${item.url}" target="_blank">${item.url}</a></div>
+                    <div class="col-note">${item.note}</div>
+                `;
+                urlList.appendChild(div);
+            });
+        } catch (e) {
+            urlList.innerHTML = '<p class="loading-msg">데이터 로드 실패 😢</p>';
+        }
+    }
     window.addEventListener('hashchange', () => {
         const tab = location.hash.replace('#', '');
         if (tab && tab !== 'search' && currentUser) switchTab(tab, false);
@@ -560,16 +560,35 @@ document.addEventListener('DOMContentLoaded', () => {
             gbList.innerHTML = '';
             messages.forEach((msg) => {
                 const div = document.createElement('div'); div.className = 'guest-item';
+                const isOwner = currentUser && (msg.username === currentUser.username || currentUser.username === 'admin');
                 div.innerHTML = `
                     <div class="guest-meta">
                         <span class="guest-name">${msg.name}</span>
                         <div style="display: flex; align-items: center; gap: 0.8rem;">
                             <span class="guest-date">${msg.date}</span>
+                            ${isOwner ? `<button class="gb-delete-btn" data-id="${msg.id}"><ion-icon name="close-outline"></ion-icon></button>` : ''}
                         </div>
                     </div>
                     <div class="guest-text">${msg.text}</div>
                 `;
                 gbList.appendChild(div);
+            });
+
+            // Delete Event
+            document.querySelectorAll('.gb-delete-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!confirm('정말 삭제하시겠습니까? 🥺')) return;
+                    const id = btn.getAttribute('data-id');
+                    try {
+                        const dr = await fetch(`/api/guestbook/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: currentUser.username })
+                        });
+                        if (dr.ok) loadGuestbook();
+                        else alert('삭제 실패! 사유를 확인해 주세요.');
+                    } catch (e) { alert('삭제 오류!'); }
+                };
             });
         } catch (e) {
             console.error('Failed to load guestbook', e);

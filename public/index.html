@@ -75,34 +75,38 @@
     <!-- Navigation (Moved outside of app-container for sticky/fixed consistency) -->
     <nav class="glass-nav" style="display: none;">
         <div class="nav-links">
-            <button class="nav-item active" data-tab="home">
+            <div class="nav-item active" data-tab="home">
                 <ion-icon name="home-outline"></ion-icon>
                 <span>Home</span>
-            </button>
-            <button class="nav-item" data-tab="news">
+            </div>
+            <div class="nav-item" data-tab="news">
                 <ion-icon name="newspaper-outline"></ion-icon>
                 <span>News</span>
-            </button>
-            <button class="nav-item" data-tab="coding">
+            </div>
+            <div class="nav-item" data-tab="coding">
                 <ion-icon name="code-working-outline"></ion-icon>
                 <span>Coding</span>
-            </button>
-            <button class="nav-item" data-tab="recipe">
+            </div>
+            <div class="nav-item" data-tab="recipe">
                 <ion-icon name="restaurant-outline"></ion-icon>
                 <span>Recipe</span>
-            </button>
-            <button class="nav-item" data-tab="gallery">
+            </div>
+            <div class="nav-item" data-tab="gallery">
                 <ion-icon name="car-sport-outline"></ion-icon>
                 <span>Car Curation</span>
-            </button>
-            <button class="nav-item" data-tab="idea">
+            </div>
+            <div class="nav-item" data-tab="idea">
                 <ion-icon name="bulb-outline"></ion-icon>
                 <span>Idea</span>
-            </button>
-            <button class="nav-item" data-tab="settings">
+            </div>
+            <div class="nav-item" data-tab="urls">
+                <ion-icon name="link-outline"></ion-icon>
+                <span>URL 모음</span>
+            </div>
+            <div class="nav-item" data-tab="settings">
                 <ion-icon name="settings-outline"></ion-icon>
                 <span>Settings</span>
-            </button>
+            </div>
         </div>
         <div class="nav-search">
             <ion-icon name="search-outline"></ion-icon>
@@ -257,6 +261,26 @@
                 </header>
                 <div class="masonry-grid" id="news-grid"></div>
                 <div id="news-sentinel" style="height: 50px;"></div>
+            </section>
+
+            <!-- [v82] URL Collection Section -->
+            <section id="urls" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>URL 모음</span></h2>
+                        <h3>코딩에 도움이 되는 URL 모음 ✨</h3>
+                    </div>
+                </header>
+                <div class="url-board-container">
+                    <div class="url-board-header">
+                        <div class="col-name">이름</div>
+                        <div class="col-link">URL</div>
+                        <div class="col-note">비고</div>
+                    </div>
+                    <div id="url-list" class="url-board-list">
+                        <p class="loading-msg">데이터를 가져오는 중...</p>
+                    </div>
+                </div>
             </section>
 
             <!-- Coding Section -->

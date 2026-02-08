@@ -133,6 +133,7 @@ const CAR_DB_ID = process.env.CAR_DB_ID;
 const RECIPE_DB_ID = process.env.RECIPE_DB_ID;
 const CODING_DB_ID = process.env.CODING_DB_ID || '2e8a6753244d80b3b40fd541753022a2';
 const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || '301a6753244d8045b498d56f10eae762';
+const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID || '2eea6753244d80bfafb6c56005a83812';
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
@@ -429,7 +430,6 @@ app.post('/api/guestbook', async (req, res) => {
     if (!text) return res.status(400).json({ error: 'Text required' });
 
     try {
-        // [DEBUG] Check database schema first or just try multiple property names
         const body = {
             parent: { database_id: GUESTBOOK_DB_ID },
             properties: {
@@ -438,11 +438,7 @@ app.post('/api/guestbook', async (req, res) => {
                 '날짜': { date: { start: new Date().toISOString() } }
             }
         };
-
-        // Note: We'll try '내용' first. If it fails, the user will see a clear error.
-        // Based on screenshot, the user has "텍스트" column. Let's adapt.
         body.properties['텍스트'] = { rich_text: [{ text: { content: text } }] };
-        // body.properties['내용'] = { rich_text: [{ text: { content: text } }] }; // We can only pick one per request or it might error if one doesn't exist
 
         const response = await fetch('https://api.notion.com/v1/pages', {
             method: 'POST',
@@ -461,6 +457,74 @@ app.post('/api/guestbook', async (req, res) => {
             console.error('[Database POST Error]', resData);
             res.status(response.status).json({ error: 'Database API Error', detail: resData });
         }
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/guestbook/:id', async (req, res) => {
+    const { id } = req.params;
+    const { username } = req.body;
+
+    try {
+        // 1. Verify ownership
+        const pageResp = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+            headers: { 'Authorization': `Bearer ${NOTION_TOKEN}`, 'Notion-Version': '2022-06-28' }
+        });
+        const pageData = await pageResp.json();
+        const owner = pageData.properties['사용자ID']?.rich_text[0]?.plain_text;
+
+        if (owner !== username && username !== 'admin') {
+            return res.status(403).json({ error: '본인 글만 삭제할 수 있습니다.' });
+        }
+
+        // 2. Archive the page
+        const delResp = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${NOTION_TOKEN}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ archived: true })
+        });
+
+        if (delResp.ok) res.json({ success: true });
+        else res.status(delResp.status).json({ error: 'Delete failed' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+/**
+ * 7. URL Collection System (Notion) [v82]
+ */
+app.get('/api/urls', async (req, res) => {
+    try {
+        const response = await fetch(`https://api.notion.com/v1/databases/${URL_COLLECTION_DB_ID}/query`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${NOTION_TOKEN}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                filter: {
+                    property: 'URL',
+                    url: { is_not_empty: true }
+                }
+            })
+        });
+        const data = await response.json();
+        const items = data.results.map(page => {
+            const props = page.properties;
+            return {
+                name: props['이름']?.title[0]?.plain_text || 'Untitled',
+                url: props['URL']?.url || '',
+                note: props['비고']?.rich_text[0]?.plain_text || ''
+            };
+        });
+        res.json(items);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
