@@ -333,35 +333,37 @@ app.get('/api/insights/papers', async (req, res) => {
  * 5. Idea Board (Cloudinary Integration) [v75]
  */
 app.get('/api/idea/list', async (req, res) => {
-    // Note: User needs to provide CLOUDINARY_URL in .env
-    const CLOUD_URL = process.env.CLOUDINARY_URL;
-    const CLOUD_NAME = process.env.CLOUDINARY_NAME;
-    const API_KEY = process.env.CLOUDINARY_API_KEY;
-    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
-
-    if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
-        console.warn('[Cloudinary] Missing credentials. Returning mock data or empty list.');
-        return res.json({ items: [], message: 'Missing Cloudinary Credentials' });
-    }
+    // [v80] Use user-provided Cloudinary config
+    const cloudName = 'deoed1tri';
+    const folderTag = 'test1';
 
     try {
-        // Simple fetch using Cloudinary API
-        const auth = Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64');
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image?max_results=50`, {
-            headers: { 'Authorization': `Basic ${auth}` }
-        });
+        // Fetch from Cloudinary Public List JSON
+        const response = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/${folderTag}.json`);
+
+        if (!response.ok) {
+            throw new Error(`Cloudinary List API failed: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        const items = (data.resources || []).map(r => ({
-            name: r.public_id.split('/').pop(),
-            imageUrl: r.secure_url,
-            link: r.secure_url,
-            pubDate: r.created_at
-        }));
+        // [v80] Re-interpret and optimize URLs
+        const items = (data.resources || []).map(img => {
+            // Optimization parameters: w_400 (width), q_auto (quality), f_auto (format)
+            const optimizedUrl = `https://res.cloudinary.com/${cloudName}/image/upload/w_400,q_auto,f_auto/v${img.version}/${img.public_id}.${img.format}`;
+
+            return {
+                name: img.public_id.split('/').pop(),
+                imageUrl: optimizedUrl,
+                link: optimizedUrl, // Direct link to optimized image
+                pubDate: new Date(img.created_at).toLocaleDateString('ko-KR')
+            };
+        });
 
         res.json({ items });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error('[Cloudinary] fetch error:', e);
+        res.status(500).json({ error: 'Failed to fetch Cloudinary gallery' });
     }
 });
 
