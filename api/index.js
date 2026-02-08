@@ -399,12 +399,19 @@ app.get('/api/guestbook', async (req, res) => {
             })
         });
         const data = await response.json();
+        if (!response.ok) {
+            console.error('[Notion GET Error]', data);
+            return res.status(response.status).json({ error: 'Notion API Fetch Failed', detail: data });
+        }
+
         const items = data.results.map(page => {
             const props = page.properties;
+            // Support both '내용' and '텍스트' for flexibility
+            const contentProp = props['내용'] || props['텍스트'];
             return {
                 id: page.id,
                 name: props['이름']?.title[0]?.plain_text || 'Anonymous',
-                text: props['내용']?.rich_text[0]?.plain_text || '',
+                text: contentProp?.rich_text[0]?.plain_text || '',
                 username: props['사용자ID']?.rich_text[0]?.plain_text || '',
                 date: props['날짜']?.date?.start
                     ? new Date(props['날짜'].date.start).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -422,6 +429,21 @@ app.post('/api/guestbook', async (req, res) => {
     if (!text) return res.status(400).json({ error: 'Text required' });
 
     try {
+        // [DEBUG] Check database schema first or just try multiple property names
+        const body = {
+            parent: { database_id: GUESTBOOK_DB_ID },
+            properties: {
+                '이름': { title: [{ text: { content: name || 'Anonymous' } }] },
+                '사용자ID': { rich_text: [{ text: { content: username || '' } }] },
+                '날짜': { date: { start: new Date().toISOString() } }
+            }
+        };
+
+        // Note: We'll try '내용' first. If it fails, the user will see a clear error.
+        // Based on screenshot, the user has "텍스트" column. Let's adapt.
+        body.properties['텍스트'] = { rich_text: [{ text: { content: text } }] };
+        // body.properties['내용'] = { rich_text: [{ text: { content: text } }] }; // We can only pick one per request or it might error if one doesn't exist
+
         const response = await fetch('https://api.notion.com/v1/pages', {
             method: 'POST',
             headers: {
@@ -429,21 +451,15 @@ app.post('/api/guestbook', async (req, res) => {
                 'Notion-Version': '2022-06-28',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                parent: { database_id: GUESTBOOK_DB_ID },
-                properties: {
-                    '이름': { title: [{ text: { content: name || 'Anonymous' } }] },
-                    '내용': { rich_text: [{ text: { content: text } }] },
-                    '사용자ID': { rich_text: [{ text: { content: username || '' } }] },
-                    '날짜': { date: { start: new Date().toISOString() } }
-                }
-            })
+            body: JSON.stringify(body)
         });
+
+        const resData = await response.json();
         if (response.ok) {
             res.json({ success: true });
         } else {
-            const err = await response.json();
-            res.status(500).json({ error: 'Notion API Error', detail: err });
+            console.error('[Notion POST Error]', resData);
+            res.status(response.status).json({ error: 'Notion API Error', detail: resData });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
