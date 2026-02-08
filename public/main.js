@@ -538,15 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemDate = (item.pubDate && item.pubDate !== 'undefined') ? item.pubDate : '';
             div.innerHTML = `<div class="card-glow"></div>${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}<div class="car-info"><h4>${itemName}</h4><p style="font-size:0.8rem; opacity:0.5;">${itemDate}</p></div>`;
             div.addEventListener('click', () => {
-                // 모달 데이터 정제 로직을 추가합니다.
-                const titleText = (item.name && item.name !== 'undefined') ? item.name : '';
-                const summaryText = (item.summary && item.summary !== 'undefined') ? item.summary : (item.desc && item.desc !== 'undefined' ? item.desc : '');
-
-                // These lines are likely intended for openDetailModal, not here.
-                // modalImg.src = item.imageUrl || item.link || '';
-                // modalTitle.textContent = titleText;
-                // modalSummary.textContent = summaryText;
-
                 if (id === 'idea-grid') {
                     // [v81] Idea Board: Show popup modal without title
                     openDetailModal(item, true);
@@ -658,6 +649,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear previous content
         modalBody.innerHTML = '';
 
+        const titleText = (item.name && item.name !== 'undefined') ? item.name : '';
+        const summaryText = (item.summary && item.summary !== 'undefined') ? item.summary : (item.desc && item.desc !== 'undefined' ? item.desc : '');
+
         if (item.youtubeId) {
             // YouTube Embed 모드
             modalBody.innerHTML = `
@@ -667,19 +661,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             allowfullscreen></iframe>
                 </div>
                 <div class="modal-text-container">
-                    <h2 id="modal-title">${item.name}</h2>
-                    <p id="modal-summary">${item.summary}</p>
+                    <h2 id="modal-title">${titleText}</h2>
+                    <p id="modal-summary">${summaryText}</p>
                 </div>
             `;
         } else {
             // 일반 이미지 모드
             modalBody.innerHTML = `
                 <div class="modal-image-container">
-                    <img id="modal-img" src="${item.imageUrl}" alt="${item.name}">
+                    <img id="modal-img" src="${item.imageUrl}" alt="${titleText}">
                 </div>
                 <div class="modal-text-container">
-                    <h2 id="modal-title">${item.name}</h2>
-                    <p id="modal-summary">${item.summary}</p>
+                    <h2 id="modal-title">${titleText}</h2>
+                    <p id="modal-summary">${summaryText}</p>
                 </div>
             `;
         }
