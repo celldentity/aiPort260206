@@ -132,6 +132,7 @@ const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const CAR_DB_ID = process.env.CAR_DB_ID;
 const RECIPE_DB_ID = process.env.RECIPE_DB_ID;
 const CODING_DB_ID = process.env.CODING_DB_ID || '2e8a6753244d80b3b40fd541753022a2';
+const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || '301a6753244d8045b498d56f10eae762';
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
@@ -347,8 +348,8 @@ app.get('/api/idea/list', async (req, res) => {
             console.error(`[Cloudinary] API Error: ${response.status} ${response.statusText}`);
             console.error(`[Cloudinary] URL: https://res.cloudinary.com/${cloudName}/image/list/${folderTag}.json`);
             console.error(`[Cloudinary] NOTE: If 404, check if 'Resource List' is enabled in Cloudinary Settings.`);
-            return res.status(response.status).json({ 
-                error: 'Cloudinary List API failed', 
+            return res.status(response.status).json({
+                error: 'Cloudinary List API failed',
                 status: response.status,
                 hint: 'Check Cloudinary "Resource List" security setting'
             });
@@ -378,6 +379,74 @@ app.get('/api/idea/list', async (req, res) => {
     } catch (e) {
         console.error('[Cloudinary] fetch error:', e);
         res.status(500).json({ error: 'Failed to fetch Cloudinary gallery', details: e.message });
+    }
+});
+
+/**
+ * 6. Guestbook System (Notion) [v81]
+ */
+app.get('/api/guestbook', async (req, res) => {
+    try {
+        const response = await fetch(`https://api.notion.com/v1/databases/${GUESTBOOK_DB_ID}/query`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${NOTION_TOKEN}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sorts: [{ property: '날짜', direction: 'descending' }]
+            })
+        });
+        const data = await response.json();
+        const items = data.results.map(page => {
+            const props = page.properties;
+            return {
+                id: page.id,
+                name: props['이름']?.title[0]?.plain_text || 'Anonymous',
+                text: props['내용']?.rich_text[0]?.plain_text || '',
+                username: props['사용자ID']?.rich_text[0]?.plain_text || '',
+                date: props['날짜']?.date?.start
+                    ? new Date(props['날짜'].date.start).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : ''
+            };
+        });
+        res.json(items);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/guestbook', async (req, res) => {
+    const { name, text, username } = req.body;
+    if (!text) return res.status(400).json({ error: 'Text required' });
+
+    try {
+        const response = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${NOTION_TOKEN}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                parent: { database_id: GUESTBOOK_DB_ID },
+                properties: {
+                    '이름': { title: [{ text: { content: name || 'Anonymous' } }] },
+                    '내용': { rich_text: [{ text: { content: text } }] },
+                    '사용자ID': { rich_text: [{ text: { content: username || '' } }] },
+                    '날짜': { date: { start: new Date().toISOString() } }
+                }
+            })
+        });
+        if (response.ok) {
+            res.json({ success: true });
+        } else {
+            const err = await response.json();
+            res.status(500).json({ error: 'Notion API Error', detail: err });
+        }
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 

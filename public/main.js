@@ -551,52 +551,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function loadGuestbook() {
-        const messages = JSON.parse(localStorage.getItem('aura_guestbook') || '[]');
+    async function loadGuestbook() {
         if (!gbList) return;
-        gbList.innerHTML = messages.length ? '' : '<p class="no-results-msg">첫 인사를 남겨주세요! 😊</p>';
-        messages.slice().reverse().forEach((msg, index) => {
-            const originalIndex = messages.length - 1 - index;
-            const div = document.createElement('div'); div.className = 'guest-item';
-            const isOwner = currentUser && (msg.username === currentUser.username);
-            div.innerHTML = `
-                <div class="guest-meta">
-                    <span class="guest-name">${msg.name}</span>
-                    <div style="display: flex; align-items: center; gap: 0.8rem;">
-                        <span class="guest-date">${msg.date}</span>
-                        ${isOwner ? `<button class="gb-delete-btn" data-index="${originalIndex}"><ion-icon name="close-outline"></ion-icon></button>` : ''}
-                    </div>
-                </div>
-                <div class="guest-text">${msg.text}</div>
-            `;
-            gbList.appendChild(div);
-        });
+        try {
+            const resp = await fetch('/api/guestbook');
+            const messages = await resp.json();
 
-        // Add delete event listeners
-        document.querySelectorAll('.gb-delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = parseInt(btn.getAttribute('data-index'));
-                if (confirm('이 방명록을 삭제할까요?')) {
-                    const msgs = JSON.parse(localStorage.getItem('aura_guestbook') || '[]');
-                    msgs.splice(idx, 1);
-                    localStorage.setItem('aura_guestbook', JSON.stringify(msgs));
-                    loadGuestbook();
-                }
+            gbList.innerHTML = '';
+            messages.forEach((msg) => {
+                const div = document.createElement('div'); div.className = 'guest-item';
+                div.innerHTML = `
+                    <div class="guest-meta">
+                        <span class="guest-name">${msg.name}</span>
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            <span class="guest-date">${msg.date}</span>
+                        </div>
+                    </div>
+                    <div class="guest-text">${msg.text}</div>
+                `;
+                gbList.appendChild(div);
             });
-        });
+        } catch (e) {
+            console.error('Failed to load guestbook', e);
+            gbList.innerHTML = '<p class="loading-msg">방명록을 불러오지 못했습니다. 😢</p>';
+        }
     }
 
-    gbSubmit?.addEventListener('click', () => {
-        const text = gbInput.value.trim(); if (!text || text.length > 200) return alert(text ? '200자 이내로 써주세요! 🌸' : '내용을 입력해주세요! ✍️');
-        const messages = JSON.parse(localStorage.getItem('aura_guestbook') || '[]');
-        messages.push({
-            name: currentUser.name,
-            username: currentUser.username,
-            text,
-            date: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        });
-        localStorage.setItem('aura_guestbook', JSON.stringify(messages));
-        gbInput.value = ''; loadGuestbook();
+    gbSubmit?.addEventListener('click', async () => {
+        const text = gbInput.value.trim();
+        if (!text || text.length > 200) return alert(text ? '200자 이내로 써주세요! 🌸' : '내용을 입력해주세요! ✍️');
+
+        try {
+            const resp = await fetch('/api/guestbook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: currentUser.name,
+                    username: currentUser.username,
+                    text: text
+                })
+            });
+
+            if (resp.ok) {
+                gbInput.value = '';
+                loadGuestbook();
+            } else {
+                alert('노션에 글을 남기지 못했어요. 😢');
+            }
+        } catch (e) {
+            alert('연동 오류가 발생했습니다. 😵');
+        }
     });
 
     const handleLogout = () => { if (confirm('정말 로그아웃 하시겠어요? 🥺')) { sessionStorage.clear(); location.hash = ''; location.reload(); } };
