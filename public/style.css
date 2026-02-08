@@ -1916,3 +1916,8 @@ main {
 .dashboard-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }  
 .dashboard-grid .glass-card { width: 100% !important; aspect-ratio: 21/9 !important; min-height: 250px !important; }  
 @media (max-width: 1400px) { .home-layout.dual-sidebar { grid-template-columns: 1fr !important; } } 
+  
+/* EMERGENCY v74 ULTRA WIDE */  
+.home-layout.dual-sidebar { max-width: 98% !important; grid-template-columns: 280px 1fr 300px !important; gap: 3rem !important; }  
+.dashboard-grid .glass-card { aspect-ratio: 32/9 !important; min-height: 250px !important; }  
+@media (max-width: 1600px) { .home-layout.dual-sidebar { grid-template-columns: 1fr !important; } } 
