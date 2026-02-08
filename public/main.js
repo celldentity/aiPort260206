@@ -449,25 +449,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Navigation ---
     function switchTab(tabId, updateHash = true) {
         if (currentUser) {
+            activeTab = tabId; // [v83] Restore activeTab assignment
+            sessionStorage.setItem('aura_active_tab', tabId);
+
             const tabs = document.querySelectorAll('.tab-content');
             const navItems = document.querySelectorAll('.nav-item');
             tabs.forEach(tab => tab.classList.remove('active'));
             navItems.forEach(item => item.classList.remove('active'));
 
-            const targetTab = document.getElementById(tabId) || document.getElementById(tabId + '-section'); // Fallback for ID inconsistencies
+            const targetTab = document.getElementById(tabId) || document.getElementById(tabId + '-section');
             if (targetTab) {
                 targetTab.classList.add('active');
                 const navItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
                 if (navItem) navItem.classList.add('active');
                 if (updateHash) location.hash = tabId;
 
-                // Tab Special Logic
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // [v83] Optimized Loading: Only load if empty or for special tabs
                 if (tabId === 'urls') loadUrlCollection();
-                if (tabId === 'news' && cursors.newsStart === 1) fetchNextNews();
-                if (tabId === 'coding') backgroundFullLoad('coding');
-                if (tabId === 'gallery') backgroundFullLoad('cars');
-                if (tabId === 'recipe') backgroundFullLoad('recipes');
-                if (tabId === 'idea') backgroundIdeaLoad();
+                else if (tabId === 'news' && cursors.newsStart === 1) fetchNextNews();
+                else if (tabId === 'coding' && allCoding.length === 0) backgroundFullLoad('coding');
+                else if (tabId === 'gallery' && allCars.length === 0) backgroundFullLoad('cars');
+                else if (tabId === 'recipe' && allRecipes.length === 0) backgroundFullLoad('recipes');
+                else if (tabId === 'idea' && allIdeas.length === 0) backgroundIdeaLoad();
             }
         }
     }
@@ -487,9 +492,11 @@ document.addEventListener('DOMContentLoaded', () => {
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'url-item';
+                // [v83] Truncate long URLs
+                const displayUrl = item.url.length > 40 ? item.url.substring(0, 40) + '...' : item.url;
                 div.innerHTML = `
                     <div class="col-name">${item.name}</div>
-                    <div class="col-link"><a href="${item.url}" target="_blank">${item.url}</a></div>
+                    <div class="col-link"><a href="${item.url}" target="_blank" title="${item.url}">${displayUrl}</a></div>
                     <div class="col-note">${item.note}</div>
                 `;
                 urlList.appendChild(div);

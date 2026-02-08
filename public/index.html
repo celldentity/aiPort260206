@@ -72,50 +72,51 @@
         </div>
     </div>
 
-    <!-- Navigation (Moved outside of app-container for sticky/fixed consistency) -->
-    <nav class="glass-nav" style="display: none;">
-        <div class="nav-links">
-            <div class="nav-item active" data-tab="home">
-                <ion-icon name="home-outline"></ion-icon>
-                <span>Home</span>
-            </div>
-            <div class="nav-item" data-tab="news">
-                <ion-icon name="newspaper-outline"></ion-icon>
-                <span>News</span>
-            </div>
-            <div class="nav-item" data-tab="coding">
-                <ion-icon name="code-working-outline"></ion-icon>
-                <span>Coding</span>
-            </div>
-            <div class="nav-item" data-tab="recipe">
-                <ion-icon name="restaurant-outline"></ion-icon>
-                <span>Recipe</span>
-            </div>
-            <div class="nav-item" data-tab="gallery">
-                <ion-icon name="car-sport-outline"></ion-icon>
-                <span>Car Curation</span>
-            </div>
-            <div class="nav-item" data-tab="idea">
-                <ion-icon name="bulb-outline"></ion-icon>
-                <span>Idea</span>
-            </div>
-            <div class="nav-item" data-tab="urls">
-                <ion-icon name="link-outline"></ion-icon>
-                <span>URL 모음</span>
-            </div>
-            <div class="nav-item" data-tab="settings">
-                <ion-icon name="settings-outline"></ion-icon>
-                <span>Settings</span>
-            </div>
-        </div>
-        <div class="nav-search">
-            <ion-icon name="search-outline"></ion-icon>
-            <input type="text" id="car-search" placeholder="검색어 입력 후 Enter...">
-        </div>
-    </nav>
+
 
     <!-- App Content (Hidden Initially) -->
     <div id="app-container" style="display: none;">
+        <!-- Navigation (Restored to scroll with container) -->
+        <nav class="glass-nav">
+            <div class="nav-links">
+                <div class="nav-item active" data-tab="home">
+                    <ion-icon name="home-outline"></ion-icon>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" data-tab="news">
+                    <ion-icon name="newspaper-outline"></ion-icon>
+                    <span>News</span>
+                </div>
+                <div class="nav-item" data-tab="coding">
+                    <ion-icon name="code-working-outline"></ion-icon>
+                    <span>Coding</span>
+                </div>
+                <div class="nav-item" data-tab="recipe">
+                    <ion-icon name="restaurant-outline"></ion-icon>
+                    <span>Recipe</span>
+                </div>
+                <div class="nav-item" data-tab="gallery">
+                    <ion-icon name="car-sport-outline"></ion-icon>
+                    <span>Car Curation</span>
+                </div>
+                <div class="nav-item" data-tab="idea">
+                    <ion-icon name="bulb-outline"></ion-icon>
+                    <span>Idea</span>
+                </div>
+                <div class="nav-item" data-tab="urls">
+                    <ion-icon name="link-outline"></ion-icon>
+                    <span>URL</span>
+                </div>
+                <div class="nav-item" data-tab="settings">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    <span>Settings</span>
+                </div>
+            </div>
+            <div class="nav-search">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="car-search" placeholder="검색어 입력 후 Enter...">
+            </div>
+        </nav>
         <!-- Main Content Area -->
         <main id="content">
             <!-- Home Section -->

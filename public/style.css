@@ -452,17 +452,14 @@ body.logged-in .glass-nav {
 
 .glass-nav {
     display: none;
-    /* Hide by default */
-    position: fixed !important;
-    top: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    /* [v83] Restored to relative position so it scrolls away */
+    position: relative !important;
+    margin: 1.5rem auto;
     width: 95%;
     max-width: 1600px;
     height: auto;
     min-height: 4.5rem;
     background: rgba(15, 15, 15, 0.8) !important;
-    /* Slightly darker for better contrast when scrolling */
     backdrop-filter: blur(25px);
     border: 1px solid var(--glass-border);
     border-radius: 2.25rem;
@@ -470,8 +467,7 @@ body.logged-in .glass-nav {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 1.5rem;
-    z-index: 9999;
-    /* Higher priority to stay on top of all modal and content */
+    z-index: 100;
 }
 
 .nav-logo {
@@ -1795,8 +1791,9 @@ footer {
 
 .url-board-header {
     display: grid;
-    grid-template-columns: 1.5fr 2fr 1.5fr;
-    padding: 1rem;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    /* [v83] Narrower spacing */
+    padding: 0.75rem 1rem;
     border-bottom: 2px solid var(--glass-border);
     font-weight: 600;
     color: var(--accent-light);
@@ -1810,8 +1807,10 @@ footer {
 
 .url-item {
     display: grid;
-    grid-template-columns: 1.5fr 2fr 1.5fr;
-    padding: 1.25rem 1rem;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    /* [v83] Match header */
+    padding: 0.8rem 1rem;
+    /* Closer padding */
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: background 0.2s;
     align-items: center;
