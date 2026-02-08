@@ -596,10 +596,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 gbInput.value = '';
                 loadGuestbook();
             } else {
-                alert('노션에 글을 남기지 못했어요. 😢');
+                const errorData = await resp.json();
+                alert(`노션에 글을 남기지 못했어요. 😢\n사유: ${errorData.detail?.message || errorData.error || '알 수 없는 오류'}`);
             }
         } catch (e) {
-            alert('연동 오류가 발생했습니다. 😵');
+            alert(`연동 오류가 발생했습니다. 😵\n${e.message}`);
         }
     });
 
