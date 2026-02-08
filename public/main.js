@@ -1,7 +1,7 @@
 // [v61] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
     // AGGRESSIVE CACHE CLEARING - v61
-    const CURRENT_VERSION = 'v75';
+    const CURRENT_VERSION = 'v76';
     const storedVersion = localStorage.getItem('app_version');
 
     if (storedVersion !== CURRENT_VERSION) {

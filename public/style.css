@@ -839,11 +839,29 @@ main {
     margin-bottom: 0.5rem;
 }
 
-
-.ai-insights-col {
+.ai-ins.right-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.5rem;
+    /* [v76] Increased gap between widgets */
+}
+
+/* Guestbook List Scroll [v76] */
+#guestbook-list {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--aura-1) transparent;
+}
+
+#guestbook-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#guestbook-list::-webkit-scrollbar-thumb {
+    background: var(--aura-1);
+    border-radius: 10px;
 }
 
 .insights-market-card,
@@ -1397,13 +1415,17 @@ main {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Footer Styling [v73] */
+/* Footer Styling [v76] */
 footer {
     margin-top: 5rem;
     padding: 3rem 2rem;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
+    border-radius: 3rem 3rem 0 0;
+    /* [NEW] Rounded top corners */
+    border-left: 1px solid rgba(255, 255, 255, 0.03);
+    border-right: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .footer-content {
@@ -1475,6 +1497,7 @@ footer {
         gap: 1rem;
     }
 }
+
 
 @media (max-width: 900px) {
     .wide-card {

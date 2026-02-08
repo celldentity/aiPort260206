@@ -54,29 +54,28 @@ app.get('/api/stock', async (req, res) => {
                 percent = -percent;
             }
         } else {
-            // --- US Stock (Naver World Finance) [v75 Fix] ---
-            url = `https://finance.naver.com/world/sise.naver?symbol=${code}`;
+            // --- US Stock (Naver Search) [v76 Improve] ---
+            // Using search query often gives better "live" card results
+            url = `https://search.naver.com/search.naver?query=미국주식+${code}`;
             const response = await fetch(url, {
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
             });
             const html = await response.text();
             const $ = cheerio.load(html);
 
-            // Naver World CSS Selectors
-            priceStr = $('.no_today .blind').eq(0).text().replace(/,/g, '');
-            const noExday = $('.no_exday');
-            changeStr = noExday.find('.blind').eq(0).text().replace(/,/g, '');
-            percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
+            // Naver Search UI Selectors
+            priceStr = $('.sise_price .stock_price').text().replace(/,/g, '') || $('.price_area .now_price').text().replace(/,/g, '');
+            changeStr = $('.sise_price .price_val').first().text().replace(/,/g, '') || $('.price_area .change_price').text().replace(/,/g, '');
+            percentStr = $('.sise_price .per_val').first().text().replace(/[+%\-]/g, '') || $('.price_area .change_percent').text().replace(/[+%\-]/g, '');
 
-            // Symbol mapping to name if possible, or just use symbol
-            name = $('.wrap_company h2 a').text() || code;
+            name = $('.sise_tit strong').text() || $('.stock_name').text() || code;
 
-            const isDown = noExday.find('.ico.down').length > 0;
+            const isDown = $('.sise_price .price_val').parent().hasClass('down') || $('.price_area .ico.down').length > 0;
             change = parseFloat(changeStr);
             percent = parseFloat(percentStr);
             if (isDown) {
-                change = -change;
-                percent = -percent;
+                change = -Math.abs(change);
+                percent = -Math.abs(percent);
             }
         }
 
