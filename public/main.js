@@ -362,6 +362,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function performLocalSearch(query) {
         if (!query) return;
+
+        // [v70 Fix] Ensure data is loaded
+        if (allCars.length === 0 && allRecipes.length === 0 && allCoding.length === 0) {
+            console.log('Search triggered with no data. forcing load...');
+            setSearchLoading(true);
+            backgroundFullLoad('cars'); backgroundFullLoad('recipes'); backgroundFullLoad('coding');
+            setTimeout(() => { setSearchLoading(false); performLocalSearch(query); }, 2500); // Retry after 2.5s
+            return;
+        }
         activeTab = 'search-results'; location.hash = 'search';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -529,11 +538,24 @@ document.addEventListener('DOMContentLoaded', () => {
         gbInput.value = ''; loadGuestbook();
     });
 
-    logoutBtn?.addEventListener('click', () => { if (confirm('정말 로그아웃 하시겠어요? 🥺')) { sessionStorage.clear(); location.hash = ''; location.reload(); } });
+    const handleLogout = () => { if (confirm('정말 로그아웃 하시겠어요? 🥺')) { sessionStorage.clear(); location.hash = ''; location.reload(); } };
+    logoutBtn?.addEventListener('click', handleLogout);
+    document.getElementById('mini-logout-btn')?.addEventListener('click', handleLogout);
     function updateSettingsUI() {
         if (!currentUser) return;
-        infoUsername.innerText = currentUser.username; infoName.innerText = currentUser.name; infoEmail.innerText = currentUser.email;
-        document.getElementById('update-name').value = currentUser.name; document.getElementById('update-email').value = currentUser.email;
+        if (infoUsername) infoUsername.innerText = currentUser.username;
+        if (infoName) infoName.innerText = currentUser.name;
+        if (infoEmail) infoEmail.innerText = currentUser.email;
+        const upName = document.getElementById('update-name');
+        const upEmail = document.getElementById('update-email');
+        if (upName) upName.value = currentUser.name;
+        if (upEmail) upEmail.value = currentUser.email;
+
+        // Mini Profile Update
+        const miniName = document.getElementById('mini-profile-name');
+        const miniEmail = document.getElementById('mini-profile-email');
+        if (miniName) miniName.innerText = currentUser.name;
+        if (miniEmail) miniEmail.innerText = `@${currentUser.username}`;
     }
     profileForm?.addEventListener('submit', e => {
         e.preventDefault();
