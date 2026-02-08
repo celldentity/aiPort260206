@@ -711,10 +711,11 @@ main {
 
 .tab-content {
     display: none;
+    animation: fadeIn 0.5s ease-out;
 }
 
 .tab-content.active {
-    display: block;
+    display: block !important;
 }
 
 .hero {
@@ -875,6 +876,8 @@ main {
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 .market-item {
@@ -999,12 +1002,6 @@ main {
     .dashboard-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
-}
-
-.scrollable-market {
-    max-height: 480px;
-    overflow-y: auto;
-    padding-right: 0.5rem;
 }
 
 .market-region-header {

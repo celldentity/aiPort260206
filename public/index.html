@@ -115,27 +115,12 @@
                 <div class="home-layout dual-sidebar">
                     <!-- Left: Guestbook & Market Sidebar -->
                     <aside class="home-sidebar left-sidebar">
-                        <div class="guestbook-container glass-card">
-                            <div class="guestbook-header">
-                                <ion-icon name="chatbubbles-outline"></ion-icon>
-                                <h3>아무말대잔치</h3>
-                            </div>
-                            <div class="guestbook-list" id="guestbook-list">
-                                <!-- 방명록 메시지들이 여기에 로드됩니다 -->
-                            </div>
-                            <div class="guestbook-input-area">
-                                <textarea id="guestbook-input" placeholder="인삿말을 남겨주세요 (최대 200자)"
-                                    maxlength="200"></textarea>
-                                <button id="guestbook-submit">기록하기</button>
-                            </div>
-                        </div>
-
                         <div class="insights-market-card glass-card">
                             <div class="insights-header">
                                 <ion-icon name="trending-up-outline"></ion-icon>
-                                <h4>주요 주식 종목 실황</h4>
+                                <h4>주요 주식 주가</h4>
                             </div>
-                            <div id="market-list" class="market-ticker scrollable-market">
+                            <div id="market-list" class="market-ticker">
                                 <p class="loading-msg">실시간 데이터 로딩 중... 📈</p>
                             </div>
                         </div>
@@ -183,6 +168,21 @@
                             </div>
                             <div id="papers-list" class="papers-column">
                                 <p class="loading-msg">논문을 검색하는 중... 🧬</p>
+                            </div>
+                        </div>
+
+                        <div class="guestbook-container glass-card">
+                            <div class="guestbook-header">
+                                <ion-icon name="chatbubbles-outline"></ion-icon>
+                                <h3>아무말대잔치</h3>
+                            </div>
+                            <div class="guestbook-list" id="guestbook-list">
+                                <!-- 방명록 메시지들이 여기에 로드됩니다 -->
+                            </div>
+                            <div class="guestbook-input-area">
+                                <textarea id="guestbook-input" placeholder="인삿말을 남겨주세요 (최대 200자)"
+                                    maxlength="200"></textarea>
+                                <button id="guestbook-submit">기록하기</button>
                             </div>
                         </div>
                     </aside>
