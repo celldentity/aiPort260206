@@ -839,11 +839,11 @@ main {
     margin-bottom: 0.5rem;
 }
 
-.ai-ins.right-sidebar {
+.home-sidebar.right-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
-    /* [v76] Increased gap between widgets */
+    gap: 3rem;
+    /* Increased gap to prevent border overlap and match left layout */
 }
 
 /* Guestbook List Scroll [v76] */
@@ -1080,6 +1080,8 @@ main {
 
 .guestbook-list::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
 }
 
@@ -1422,7 +1424,7 @@ footer {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
-    border-radius: 3rem 3rem 0 0;
+    border-radius: 3rem;
     /* [NEW] Rounded top corners */
     border-left: 1px solid rgba(255, 255, 255, 0.03);
     border-right: 1px solid rgba(255, 255, 255, 0.03);

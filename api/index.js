@@ -20,10 +20,19 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// [NEW] Stock Scraping Endpoint (Naver Finance KR / Yahoo Finance US)
+// --- Stock Logic with 30-minute Cache ---
+const stockCache = {};
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in ms
+
 app.get('/api/stock', async (req, res) => {
     const code = req.query.code; // e.g., '005930' (KR) or 'NVDA' (US)
     if (!code) return res.status(400).json({ error: 'Code required' });
+
+    // Check Cache
+    const now = Date.now();
+    if (stockCache[code] && (now - stockCache[code].timestamp < CACHE_DURATION)) {
+        return res.json(stockCache[code].data);
+    }
 
     try {
         const isKR = /^[0-9]+$/.test(code);
@@ -33,63 +42,79 @@ app.get('/api/stock', async (req, res) => {
         if (isKR) {
             // --- KR Stock (Naver Finance) ---
             url = `https://finance.naver.com/item/main.naver?code=${code}`;
-            const response = await fetch(url, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
-            });
+            const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
             const html = await response.text();
             const $ = cheerio.load(html);
 
-            // [FIX] Use eq(0) to get ONLY the first element (Price)
-            priceStr = $('.no_today .blind').eq(0).text().replace(/,/g, '');
+            // Detailed selectors for Naver Finance
+            priceStr = $('.no_today .blind').first().text().replace(/,/g, '');
             const noExday = $('.no_exday');
-            changeStr = noExday.find('.blind').eq(0).text().replace(/,/g, '');
+            changeStr = noExday.find('.blind').first().text().replace(/,/g, '');
             percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
-            name = $('.wrap_company h2 a').text();
+            name = $('.wrap_company h2 a').text().trim();
 
             const isDown = noExday.find('.ico.down').length > 0;
-            change = parseFloat(changeStr);
-            percent = parseFloat(percentStr);
-            if (isDown) {
-                change = -change;
-                percent = -percent;
-            }
-        } else {
-            // --- US Stock (Naver Search) [v76 Improve] ---
-            // Using search query often gives better "live" card results
-            url = `https://search.naver.com/search.naver?query=미국주식+${code}`;
-            const response = await fetch(url, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
-            });
-            const html = await response.text();
-            const $ = cheerio.load(html);
-
-            // Naver Search UI Selectors
-            priceStr = $('.sise_price .stock_price').text().replace(/,/g, '') || $('.price_area .now_price').text().replace(/,/g, '');
-            changeStr = $('.sise_price .price_val').first().text().replace(/,/g, '') || $('.price_area .change_price').text().replace(/,/g, '');
-            percentStr = $('.sise_price .per_val').first().text().replace(/[+%\-]/g, '') || $('.price_area .change_percent').text().replace(/[+%\-]/g, '');
-
-            name = $('.sise_tit strong').text() || $('.stock_name').text() || code;
-
-            const isDown = $('.sise_price .price_val').parent().hasClass('down') || $('.price_area .ico.down').length > 0;
-            change = parseFloat(changeStr);
-            percent = parseFloat(percentStr);
+            change = parseFloat(changeStr) || 0;
+            percent = parseFloat(percentStr) || 0;
             if (isDown) {
                 change = -Math.abs(change);
                 percent = -Math.abs(percent);
             }
+        } else {
+            // --- US Stock (Yahoo Finance API) ---
+            try {
+                const yfUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${code}`;
+                const response = await fetch(yfUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) });
+                if (response.ok) {
+                    const data = await response.json();
+                    const meta = data.chart?.result?.[0]?.meta;
+                    if (meta && meta.regularMarketPrice !== undefined) {
+                        priceStr = meta.regularMarketPrice.toString();
+                        const pc = meta.previousClose || meta.chartPreviousClose;
+                        change = pc ? (meta.regularMarketPrice - pc) : 0;
+                        percent = pc ? (change / pc * 100) : 0;
+                        name = meta.longName || meta.shortName || code;
+                    }
+                }
+            } catch (e) { console.error(`[Yahoo] Failed for ${code}:`, e.message); }
+
+            // Fallback to Naver Search IF Yahoo fails
+            if (!priceStr || isNaN(parseFloat(priceStr))) {
+                const sUrl = `https://search.naver.com/search.naver?query=미국주식+${code}`;
+                const sResp = await fetch(sUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+                const sHtml = await sResp.text();
+                const $s = cheerio.load(sHtml);
+                priceStr = $s('.sise_price .stock_price').text().replace(/,/g, '') || $s('.price_area .now_price').text().replace(/,/g, '');
+                changeStr = $s('.sise_price .price_val').first().text().replace(/,/g, '') || $s('.price_area .change_price').text().replace(/,/g, '');
+                percentStr = $s('.sise_price .per_val').first().text().replace(/[+%\-]/g, '') || $s('.price_area .change_percent').text().replace(/[+%\-]/g, '');
+                name = $s('.sise_tit strong').text() || $s('.stock_name').text() || code;
+                const isDown = $s('.sise_price .price_val').parent().hasClass('down') || $s('.price_area .ico.down').length > 0;
+                change = parseFloat(changeStr) || 0;
+                percent = parseFloat(percentStr) || 0;
+                if (isDown) { change = -Math.abs(change); percent = -Math.abs(percent); }
+            }
         }
 
-        if (!priceStr || isNaN(parseFloat(priceStr))) throw new Error('Parsing failed');
+        if (!priceStr || isNaN(parseFloat(priceStr))) throw new Error('Data parsing failed');
 
-        res.json({
+        const stockData = {
             price: parseFloat(priceStr),
             change: change || 0,
             percent: percent || 0,
-            name: name || code
-        });
+            name: name || code,
+            updatedAt: new Date().toISOString()
+        };
+
+        // Cache the result
+        stockCache[code] = {
+            timestamp: now,
+            data: stockData
+        };
+
+        res.json(stockData);
     } catch (e) {
-        console.error(`Stock fetch failed for ${code}:`, e);
-        res.status(500).json({ error: 'Failed to fetch stock data' });
+        console.error(`[Stock API Error] Fetched failed for ${code}:`, e);
+        res.status(500).json({ error: 'Failed to fetch stock data', detail: e.message });
     }
 });
 
