@@ -805,7 +805,7 @@ main {
 
 /* [v57] AI Insights Styles Refined */
 .main-content-layout {
-    display: grid;
+    display: none !important;
     grid-template-columns: 1fr 380px;
     gap: 2.5rem;
     align-items: start;
@@ -813,7 +813,7 @@ main {
 }
 
 .dashboard-grid {
-    display: grid;
+    display: none !important;
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 1.5rem;
 }

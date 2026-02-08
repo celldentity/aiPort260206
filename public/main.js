@@ -232,26 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Dashboard Preview System (v53) ---
-    function updateDashboardPreview(type) {
-        const cardId = type === 'cars' ? 'card-car' : type === 'recipes' ? 'card-recipe' : type === 'coding' ? 'card-coding' : 'card-news';
-        const card = document.getElementById(cardId);
-        if (!card) return;
 
-        const data = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : type === 'coding' ? allCoding : allNews;
-        const itemsWithImg = data.filter(i => i.imageUrl);
-
-        if (itemsWithImg.length > 0) {
-            const randomItem = itemsWithImg[Math.floor(Math.random() * itemsWithImg.length)];
-            let bg = card.querySelector('.card-preview-bg');
-            if (!bg) {
-                bg = document.createElement('div');
-                bg.className = 'card-preview-bg';
-                card.prepend(bg);
-            }
-            bg.style.backgroundImage = `url(${randomItem.imageUrl})`;
-            setTimeout(() => bg.classList.add('loaded'), 100);
-        }
-    }
 
     // --- Search Status Control ---
     function setSearchLoading(isLoading) {
@@ -288,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (activeTab === (type === 'cars' ? 'gallery' : type === 'recipes' ? 'recipe' : 'coding')) {
                         appendData(data.items, gridId, false);
                     }
-                    if (isFirstBatch) { updateDashboardPreview(type); isFirstBatch = false; }
+                    if (isFirstBatch) { isFirstBatch = false; }
                     hasMore = data.hasMore;
                     cursor = data.nextCursor;
                 } else {
@@ -316,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 appendData(data.items, 'news-grid', true);
                 cursors.newsStart = data.nextStart;
                 hasMoreNews = data.hasMore;
-                updateDashboardPreview('news');
+
             } else {
                 hasMoreNews = false;
             }
