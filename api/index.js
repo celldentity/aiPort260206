@@ -400,8 +400,8 @@ app.get('/api/guestbook', async (req, res) => {
         });
         const data = await response.json();
         if (!response.ok) {
-            console.error('[Notion GET Error]', data);
-            return res.status(response.status).json({ error: 'Notion API Fetch Failed', detail: data });
+            console.error('[Database GET Error]', data);
+            return res.status(response.status).json({ error: 'Database Fetch Failed', detail: data });
         }
 
         const items = data.results.map(page => {
@@ -458,8 +458,8 @@ app.post('/api/guestbook', async (req, res) => {
         if (response.ok) {
             res.json({ success: true });
         } else {
-            console.error('[Notion POST Error]', resData);
-            res.status(response.status).json({ error: 'Notion API Error', detail: resData });
+            console.error('[Database POST Error]', resData);
+            res.status(response.status).json({ error: 'Database API Error', detail: resData });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
