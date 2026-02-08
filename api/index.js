@@ -1,8 +1,24 @@
+const express = require('express');
+const cors = require('cors');
+const nodemailer = require('nodemailer');
+const path = require('path');
 const cheerio = require('cheerio'); // [NEW] For scraping
+require('dotenv').config();
 
-// ... (existing imports)
+const app = express();
 
-// ... (existing middleware)
+// --- Express Middlewares ---
+app.use(cors());
+app.use(express.json());
+
+// Vercel deployment uses 'public/' directory automatically.
+// For local 'npm start' support, we serve the 'public' folder.
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Explicitly handle root for local dev
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+});
 
 // [NEW] Stock Scraping Endpoint (Naver Finance)
 app.get('/api/stock', async (req, res) => {
@@ -54,12 +70,6 @@ app.get('/api/stock', async (req, res) => {
  * 3. Market \u0026 Coding List (Mock Data)
  */
 // ... (rest of the file)
-app.use(express.json());
-
-// Vercel deployment uses 'public/' directory automatically.
-// For local 'npm start' support, we serve the 'public' folder.
-app.use(express.static(path.join(__dirname, '..', 'public')));
-
 // Explicitly handle root for local dev
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
