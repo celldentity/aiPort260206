@@ -448,36 +448,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Navigation ---
     function switchTab(tabId, updateHash = true) {
-        if (currentUser) {
-            activeTab = tabId; // [v83] Restore activeTab assignment
-            sessionStorage.setItem('aura_active_tab', tabId);
+        if (!currentUser) return;
 
-            const tabs = document.querySelectorAll('.tab-content');
-            const navItems = document.querySelectorAll('.nav-item');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            navItems.forEach(item => item.classList.remove('active'));
+        activeTab = tabId;
+        sessionStorage.setItem('aura_active_tab', tabId);
+        if (updateHash) location.hash = tabId;
 
-            const targetTab = document.getElementById(tabId) || document.getElementById(tabId + '-section');
-            if (targetTab) {
-                targetTab.classList.add('active');
-                const navItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
-                if (navItem) navItem.classList.add('active');
-                if (updateHash) location.hash = tabId;
+        // [v83] Explicit Visibility Control (Restore style.display to override any stuck inline styles)
+        const sections = document.querySelectorAll('.tab-content');
+        sections.forEach(sec => {
+            sec.style.display = 'none';
+            sec.classList.remove('active');
+        });
 
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        const targetTab = document.getElementById(tabId) || document.getElementById(tabId + '-section');
+        if (targetTab) {
+            targetTab.style.display = 'block';
+            targetTab.classList.add('active');
 
-                // [v83] Optimized Loading: Only load if empty or for special tabs
-                if (tabId === 'urls') loadUrlCollection();
-                else if (tabId === 'news' && cursors.newsStart === 1) fetchNextNews();
-                else if (tabId === 'coding' && allCoding.length === 0) backgroundFullLoad('coding');
-                else if (tabId === 'gallery' && allCars.length === 0) backgroundFullLoad('cars');
-                else if (tabId === 'recipe' && allRecipes.length === 0) backgroundFullLoad('recipes');
-                else if (tabId === 'idea' && allIdeas.length === 0) backgroundIdeaLoad();
+            // Update Nav UI
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.getAttribute('data-tab') === tabId);
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // [v83] Data Strategy: Load if empty, Refresh if exists to ensure visibility
+            if (tabId === 'urls') {
+                loadUrlCollection();
+            } else if (tabId === 'news') {
+                if (cursors.newsStart === 1) fetchNextNews();
+                else refreshGrid(allNews, 'news-grid', true);
+            } else if (tabId === 'coding' || tabId === 'gallery' || tabId === 'recipe') {
+                const type = tabId === 'gallery' ? 'cars' : tabId === 'recipe' ? 'recipes' : 'coding';
+                const gridId = type === 'cars' ? 'gallery-grid' : type === 'recipes' ? 'recipe-grid' : 'coding-grid';
+                const dataArray = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : allCoding;
+
+                if (dataArray.length === 0) backgroundFullLoad(type);
+                else refreshGrid(dataArray, gridId, false);
+            } else if (tabId === 'idea') {
+                if (allIdeas.length === 0) backgroundIdeaLoad();
+                else refreshGrid(allIdeas, 'idea-grid', false);
             }
         }
     }
 
-    // [v82] URL Collection Loader
+    // [v82] URL Collection Loader (Enhanced for v83)
     async function loadUrlCollection() {
         const urlList = document.getElementById('url-list');
         if (!urlList) return;
@@ -485,15 +501,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const resp = await fetch('/api/urls');
             const data = await resp.json();
             urlList.innerHTML = '';
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 urlList.innerHTML = '<p class="no-results-msg">아직 등록된 URL이 없습니다. 🔗</p>';
                 return;
             }
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'url-item';
-                // [v83] Truncate long URLs
-                const displayUrl = item.url.length > 40 ? item.url.substring(0, 40) + '...' : item.url;
+                // [v83] Smarter link truncation
+                const displayUrl = item.url.length > 50 ? item.url.substring(0, 47) + '...' : item.url;
                 div.innerHTML = `
                     <div class="col-name">${item.name}</div>
                     <div class="col-link"><a href="${item.url}" target="_blank" title="${item.url}">${displayUrl}</a></div>
@@ -509,7 +525,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const tab = location.hash.replace('#', '');
         if (tab && tab !== 'search' && currentUser) switchTab(tab, false);
     });
-    document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => switchTab(item.getAttribute('data-tab'))));
+    // [v83] Event Delegation for Navigation (More robust)
+    document.addEventListener('click', e => {
+        const navItem = e.target.closest('.nav-item');
+        if (navItem) {
+            const tabId = navItem.getAttribute('data-tab');
+            if (tabId) switchTab(tabId);
+        }
+    });
 
     // --- Filter & Sorting Logic (Local) ---
     function refreshGrid(data, id, isNews) {

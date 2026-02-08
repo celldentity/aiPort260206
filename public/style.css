@@ -454,7 +454,8 @@ body.logged-in .glass-nav {
     display: none;
     /* [v83] Restored to relative position so it scrolls away */
     position: relative !important;
-    margin: 1.5rem auto;
+    margin: 0.5rem auto 1rem auto;
+    /* [v83] Tighter margins */
     width: 95%;
     max-width: 1600px;
     height: auto;
@@ -734,7 +735,8 @@ body.logged-in .glass-nav {
 }
 
 main {
-    padding: 10rem 2rem 5rem 2rem;
+    padding: 2rem 2rem 5rem 2rem;
+    /* [v83] Reduced top padding from 10rem to 2rem */
     max-width: 1600px;
     margin: 0 auto;
     position: relative;
