@@ -1283,21 +1283,25 @@ main {
 /* [v72] Wide Dashboard Grid */
 .dashboard-wide-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
     margin-top: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .wide-card {
     position: relative;
-    border-radius: 1.2rem;
+    border-radius: 1.5rem;
     overflow: hidden;
-    height: 110px;
+    aspect-ratio: 1 / 1;
+    height: auto;
     width: 100%;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    padding: 0 2rem;
+    text-align: center;
+    padding: 2rem;
     cursor: pointer;
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1331,18 +1335,20 @@ main {
     position: relative;
     z-index: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .wide-card ion-icon {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     color: var(--aura-1);
     background: rgba(0, 0, 0, 0.3);
-    padding: 0.6rem;
+    padding: 1rem;
     border-radius: 50%;
     backdrop-filter: blur(5px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 0.5rem;
 }
 
 .wide-card .card-text h3 {
@@ -1359,10 +1365,21 @@ main {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* Footer Styling */
+footer {
+    margin-top: 4rem;
+    padding: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+}
+
 @media (max-width: 900px) {
     .wide-card {
-        height: 100px;
-        padding: 0 1.5rem;
+        height: auto;
+        padding: 1.5rem;
+        aspect-ratio: 1/1;
     }
 }
 
