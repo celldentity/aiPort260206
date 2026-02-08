@@ -1,7 +1,7 @@
 // [v61] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
     // AGGRESSIVE CACHE CLEARING - v61
-    const CURRENT_VERSION = 'v61';
+    const CURRENT_VERSION = 'v62';
     const storedVersion = localStorage.getItem('app_version');
 
     if (storedVersion !== CURRENT_VERSION) {
@@ -349,7 +349,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     searchInput?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') performLocalSearch(searchInput.value.trim().toLowerCase());
+        if (e.key === 'Enter') {
+            e.preventDefault(); // 기본 동작 방지 (혹시 모를 폼 전송 등)
+            performLocalSearch(searchInput.value.trim().toLowerCase());
+        }
     });
 
     mobileSearchInput?.addEventListener('keydown', e => {

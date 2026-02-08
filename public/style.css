@@ -820,7 +820,7 @@ main {
 
 .dashboard-grid .glass-card {
     min-height: auto !important;
-    aspect-ratio: 4 / 3.2;
+    aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -886,6 +886,8 @@ main {
     border-radius: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
     transition: 0.3s;
+    gap: 1rem;
+    /* 추가: 아이템 간 간격 확보 */
 }
 
 .market-item:hover {
@@ -896,29 +898,42 @@ main {
 .market-info-left {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    /* 중요: flex item 내에서 말줄임표 작동을 위해 필요 */
 }
 
 .market-symbol {
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
 }
 
 .market-name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     opacity: 0.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
 }
 
 .market-info-right {
     text-align: right;
+    flex-shrink: 0;
+    /* 가격 부분은 줄어들지 않도록 고정 */
 }
 
 .market-price {
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
 }
 
 .market-change {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
 }
 
