@@ -2281,8 +2281,8 @@ footer {
 @media (max-width: 1400px) {
     .home-layout.dual-sidebar {
         grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
-        /* One line height gap */
+        gap: 1rem !important;
+        /* One line height gap adjusted to 1rem */
         max-width: 100% !important;
         padding: 0 1rem;
     }
