@@ -1,7 +1,7 @@
 // [v61] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
     // AGGRESSIVE CACHE CLEARING - v61
-    const CURRENT_VERSION = 'v62';
+    const CURRENT_VERSION = 'v74';
     const storedVersion = localStorage.getItem('app_version');
 
     if (storedVersion !== CURRENT_VERSION) {
@@ -384,11 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function performLocalSearch(query) {
         if (!query) return;
 
-        // [v70 Fix] Ensure data is loaded
-        activeTab = 'search-results'; location.hash = 'search';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        searchSection.classList.add('active');
+        // [v74 Fix] Use switchTab for consistency
+        switchTab('search-results', false);
+        location.hash = 'search';
+        searchInput.blur();
 
         if (allCars.length === 0 && allRecipes.length === 0 && allCoding.length === 0) {
             console.log('Search triggered with no data. forcing load...');
