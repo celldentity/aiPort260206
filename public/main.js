@@ -301,12 +301,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await resp.json();
 
                 if (data && data.items && Array.isArray(data.items)) {
-                    if (type === 'cars') allCars.push(...data.items);
-                    else if (type === 'recipes') allRecipes.push(...data.items);
-                    else allCoding.push(...data.items);
+                    const targetArray = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : allCoding;
+                    const gridId = type === 'cars' ? 'gallery-grid' : type === 'recipes' ? 'recipe-grid' : 'coding-grid';
+
+                    targetArray.push(...data.items);
+
+                    // Always sort by name DESC by default (v80)
+                    targetArray.sort((a, b) => b.name.localeCompare(a.name, 'ko'));
 
                     if (activeTab === (type === 'cars' ? 'gallery' : type === 'recipes' ? 'recipe' : 'coding')) {
-                        appendData(data.items, gridId, false);
+                        refreshGrid(targetArray, gridId, false);
                     }
                     if (isFirstBatch) { isFirstBatch = false; updateWideDashboardPreviews(); }
                     hasMore = data.hasMore;

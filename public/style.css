@@ -852,7 +852,7 @@ main {
     overflow-y: auto;
     padding-right: 1rem;
     scrollbar-width: thin;
-    scrollbar-color: var(--aura-1) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 #guestbook-list::-webkit-scrollbar {
@@ -860,7 +860,7 @@ main {
 }
 
 #guestbook-list::-webkit-scrollbar-thumb {
-    background: var(--aura-1);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
 }
 
