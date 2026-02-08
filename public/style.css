@@ -1075,14 +1075,29 @@ main {
 }
 
 .guestbook-list::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
+}
+
+.guestbook-list::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .guestbook-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05);
+}
+
+.guestbook-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Firefox Support for Glass Scrollbar */
+.guestbook-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .guest-item {
@@ -2266,40 +2281,29 @@ footer {
 @media (max-width: 1400px) {
     .home-layout.dual-sidebar {
         grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+        /* One line height gap */
+        max-width: 100% !important;
+        padding: 0 1rem;
+    }
+
+    .home-main {
+        order: 1 !important;
     }
 
     .home-sidebar.right-sidebar {
         display: flex !important;
-        order: 3;
+        flex-direction: column;
+        gap: 1.5rem;
+        order: 2 !important;
     }
-}
 
-.home-layout.dual-sidebar {
-    max-width: 98% !important;
-    grid-template-columns: 250px 1fr 300px !important;
-}
-
-@media (min-width: 1401px) {
-    .home-layout.dual-sidebar {
-        grid-template-columns: 250px 1fr 300px !important;
-    }
-}
-
-.dashboard-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1.5rem !important;
-}
-
-.dashboard-grid .glass-card {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 21/9 !important;
-    min-height: 0 !important;
-}
-
-@media (max-width: 1400px) {
-    .home-layout.dual-sidebar {
-        grid-template-columns: 1fr !important;
+    .home-sidebar.left-sidebar {
+        display: flex !important;
+        /* Ensure stocks are visible */
+        flex-direction: column;
+        gap: 1.5rem;
+        order: 3 !important;
     }
 
     .dashboard-grid {
