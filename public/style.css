@@ -771,6 +771,10 @@ main {
     .home-sidebar {
         margin-top: 1rem;
     }
+
+    main {
+        padding-top: 6rem;
+    }
 }
 
 /* AI Notice Box */
