@@ -642,43 +642,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loadStocks = async (stocks) => {
                     const stockPromises = stocks.map(async (stock) => {
                         try {
-                            let data;
-                            // [NEW] Use our own API for Korean stocks (Naver Scraping)
+                            let code = stock.symbol;
+                            // KR stocks: remove .KS suffix for Naver
                             if (stock.region === 'KR') {
-                                const code = stock.symbol.replace('.KS', '');
-                                const response = await fetch(`/api/stock?code=${code}`);
-                                if (!response.ok) throw new Error('API Error');
-                                data = await response.json();
-
-                                return {
-                                    symbol: stock.symbol,
-                                    name: stock.name,
-                                    region: stock.region,
-                                    price: data.price,
-                                    change: data.change,
-                                    percent: data.percent,
-                                    isLive: true
-                                };
-                            } else {
-                                // US Stocks: Keep using FMP Demo (or fallback if fails)
-                                const response = await fetch(`https://financialmodelingprep.com/api/v3/quote/${stock.symbol}?apikey=demo`, { timeout: 3000 });
-                                const json = await response.json();
-                                if (json && json.length > 0) {
-                                    const quote = json[0];
-                                    return {
-                                        symbol: stock.symbol,
-                                        name: stock.name,
-                                        region: stock.region,
-                                        price: quote.price,
-                                        change: quote.change,
-                                        percent: quote.changesPercentage,
-                                        isLive: true
-                                    };
-                                }
-                                throw new Error('FMP No Data');
+                                code = stock.symbol.replace('.KS', '');
                             }
+
+                            // Call our Unified API (Naver for KR, Yahoo for US)
+                            const response = await fetch(`/api/stock?code=${code}`);
+                            if (!response.ok) throw new Error('API Error');
+
+                            const data = await response.json();
+                            return {
+                                symbol: stock.symbol,
+                                name: stock.name,
+                                region: stock.region,
+                                price: data.price,
+                                change: data.change,
+                                percent: data.percent,
+                                isLive: true
+                            };
                         } catch (e) {
-                            // Use fallback data
+                            // Use fallback data if scraping fails
                             return {
                                 symbol: stock.symbol,
                                 name: stock.name,
@@ -686,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 price: stock.fallback.price,
                                 change: stock.fallback.change,
                                 percent: stock.fallback.percent,
-                                isLive: false // Failed to fetch live
+                                isLive: false
                             };
                         }
                     });
@@ -723,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="market-region-header" style="margin-top:1rem;">🇰🇷 한국 주요 종목 ${hasLiveData ? '(네이버 실시간)' : '(최근 종가)'}</div>
                 ${krData.map(renderStock).join('')}
                 <p style="font-size:0.7rem; opacity:0.5; margin-top:1rem; text-align:center;">
-                    * 데이터 출처: 네이버 금융 (KR) / FMP API (US) <br>
+                    * 데이터 출처: 네이버 금융 (KR) / 야후 파이낸스 (US) <br>
                     * 자동 업데이트: 30초 주기
                 </p>
                 `;

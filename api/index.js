@@ -20,45 +20,65 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// [NEW] Stock Scraping Endpoint (Naver Finance)
+// [NEW] Stock Scraping Endpoint (Naver Finance KR / Yahoo Finance US)
 app.get('/api/stock', async (req, res) => {
-    const code = req.query.code; // e.g., '005930'
+    const code = req.query.code; // e.g., '005930' (KR) or 'NVDA' (US)
     if (!code) return res.status(400).json({ error: 'Code required' });
 
     try {
-        const url = `https://finance.naver.com/item/main.naver?code=${code}`;
-        const response = await fetch(url, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
-        });
-        const html = await response.text();
-        const $ = cheerio.load(html);
+        const isKR = /^[0-9]+$/.test(code);
+        let url, priceStr, changeStr, percentStr, name;
+        let change = 0, percent = 0;
 
-        // Parse Data from Naver Finance Structure
-        const priceStr = $('.no_today .blind').text().replace(/,/g, '');
-        const noExday = $('.no_exday');
-        // Usually: 1st blind is Change, 2nd blind is Percent
-        const changeStr = noExday.find('.blind').eq(0).text().replace(/,/g, '');
-        const percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
+        if (isKR) {
+            // --- KR Stock (Naver Finance) ---
+            url = `https://finance.naver.com/item/main.naver?code=${code}`;
+            const response = await fetch(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
+            });
+            const html = await response.text();
+            const $ = cheerio.load(html);
 
-        // Check up/down class for sign
-        const isUp = noExday.find('.ico.up').length > 0;
-        const isDown = noExday.find('.ico.down').length > 0;
+            // [FIX] Use eq(0) to get ONLY the first element (Price)
+            priceStr = $('.no_today .blind').eq(0).text().replace(/,/g, '');
+            const noExday = $('.no_exday');
+            changeStr = noExday.find('.blind').eq(0).text().replace(/,/g, '');
+            percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
+            name = $('.wrap_company h2 a').text();
 
-        let change = parseFloat(changeStr);
-        let percent = parseFloat(percentStr);
+            const isDown = noExday.find('.ico.down').length > 0;
+            change = parseFloat(changeStr);
+            percent = parseFloat(percentStr);
+            if (isDown) {
+                change = -change;
+                percent = -percent;
+            }
+        } else {
+            // --- US Stock (Yahoo Finance) ---
+            url = `https://finance.yahoo.com/quote/${code}`;
+            const response = await fetch(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
+            });
+            const html = await response.text();
+            const $ = cheerio.load(html);
 
-        if (isDown) {
-            change = -change;
-            percent = -percent;
+            // Yahoo selector: fin-streamer
+            priceStr = $(`fin-streamer[data-field="regularMarketPrice"][data-symbol="${code}"]`).text().replace(/,/g, '');
+            changeStr = $(`fin-streamer[data-field="regularMarketChange"][data-symbol="${code}"]`).text().replace(/,/g, '');
+            percentStr = $(`fin-streamer[data-field="regularMarketChangePercent"][data-symbol="${code}"]`).text().replace(/[%,()]/g, ''); // Remove %, (, )
+            name = $('h1').first().text(); // Usually contains company name
+
+            change = parseFloat(changeStr);
+            percent = parseFloat(percentStr);
         }
 
-        if (!priceStr) throw new Error('Parsing failed');
+        if (!priceStr || isNaN(parseFloat(priceStr))) throw new Error('Parsing failed');
 
         res.json({
             price: parseFloat(priceStr),
             change: change || 0,
             percent: percent || 0,
-            name: $('.wrap_company h2 a').text() || code
+            name: name || code
         });
     } catch (e) {
         console.error(`Stock fetch failed for ${code}:`, e);
