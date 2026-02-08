@@ -765,10 +765,11 @@ main {
 @media (max-width: 1100px) {
     .home-layout {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .home-sidebar {
-        margin-top: 3rem;
+        margin-top: 1rem;
     }
 }
 
@@ -842,8 +843,7 @@ main {
 .home-sidebar.right-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
-    /* Increased gap to prevent border overlap and match left layout */
+    gap: 1rem;
 }
 
 /* Guestbook List Scroll [v76] */

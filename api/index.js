@@ -337,15 +337,29 @@ app.get('/api/idea/list', async (req, res) => {
     const cloudName = 'deoed1tri';
     const folderTag = 'test1';
 
+    console.log(`[Cloudinary] Fetching list for cloud: ${cloudName}, tag: ${folderTag}`);
+
     try {
         // Fetch from Cloudinary Public List JSON
         const response = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/${folderTag}.json`);
 
         if (!response.ok) {
-            throw new Error(`Cloudinary List API failed: ${response.status}`);
+            console.error(`[Cloudinary] API Error: ${response.status} ${response.statusText}`);
+            console.error(`[Cloudinary] URL: https://res.cloudinary.com/${cloudName}/image/list/${folderTag}.json`);
+            console.error(`[Cloudinary] NOTE: If 404, check if 'Resource List' is enabled in Cloudinary Settings.`);
+            return res.status(response.status).json({ 
+                error: 'Cloudinary List API failed', 
+                status: response.status,
+                hint: 'Check Cloudinary "Resource List" security setting'
+            });
         }
 
         const data = await response.json();
+        console.log(`[Cloudinary] Successfully fetched ${data.resources?.length || 0} items.`);
+
+        if (!data.resources || data.resources.length === 0) {
+            console.warn(`[Cloudinary] No resources found for tag: ${folderTag}`);
+        }
 
         // [v80] Re-interpret and optimize URLs
         const items = (data.resources || []).map(img => {
@@ -363,7 +377,7 @@ app.get('/api/idea/list', async (req, res) => {
         res.json({ items });
     } catch (e) {
         console.error('[Cloudinary] fetch error:', e);
-        res.status(500).json({ error: 'Failed to fetch Cloudinary gallery' });
+        res.status(500).json({ error: 'Failed to fetch Cloudinary gallery', details: e.message });
     }
 });
 
