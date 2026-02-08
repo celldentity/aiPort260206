@@ -435,7 +435,8 @@ body.logged-in #app-container {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 1.5rem;
-    z-index: 100;
+    z-index: 1000;
+    /* Ensure it stays on top */
 }
 
 .nav-logo {

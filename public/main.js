@@ -306,9 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     targetArray.push(...data.items);
 
-                    // Always sort by name DESC by default (v80)
-                    targetArray.sort((a, b) => b.name.localeCompare(a.name, 'ko'));
-
                     if (activeTab === (type === 'cars' ? 'gallery' : type === 'recipes' ? 'recipe' : 'coding')) {
                         refreshGrid(targetArray, gridId, false);
                     }
