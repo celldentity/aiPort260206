@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MBC Academy | 수빈쓰</title>
+    <title>Celldentity | AI Gallery</title>
     <!-- Google Fonts: Inter, Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,6 +97,10 @@
                     <ion-icon name="car-sport-outline"></ion-icon>
                     <span>Car Curation</span>
                 </button>
+                <button class="nav-item" data-tab="idea">
+                    <ion-icon name="bulb-outline"></ion-icon>
+                    <span>Idea</span>
+                </button>
                 <button class="nav-item" data-tab="settings">
                     <ion-icon name="settings-outline"></ion-icon>
                     <span>Settings</span>
@@ -129,7 +133,7 @@
                     <!-- Center: Hero & Dashboard -->
                     <div class="home-main">
                         <header class="hero">
-                            <h2 class="reveal-text">MBC Arcademy<br><span class="gradient-text">AIX 2026 Gallery</span>
+                            <h2 class="reveal-text">Celldentity<br><span class="gradient-text">AIX 2026 Gallery</span>
                             </h2>
                             <p class="subtitle">맨땅에 헤딩하는 AI시대 새싹 코더를 위한 공간</p>
 
@@ -178,7 +182,17 @@
                                     <ion-icon name="car-sport-outline"></ion-icon>
                                     <div class="card-text">
                                         <h3>Car Gallery</h3>
-                                        <p>미래 자동차 디자인</p>
+                                        <p>AI가 큐레이팅한 자동차</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wide-card glass-card" data-target="idea" id="card-idea">
+                                <div class="card-bg"></div>
+                                <div class="card-content">
+                                    <ion-icon name="bulb-outline"></ion-icon>
+                                    <div class="card-text">
+                                        <h3>Idea Board</h3>
+                                        <p>Cloudinary 시각적 영감</p>
                                     </div>
                                 </div>
                             </div>
@@ -307,6 +321,22 @@
                 <div id="gallery-sentinel" style="height: 50px;"></div>
             </section>
 
+            </section>
+
+            <!-- Idea Board Section [NEW] -->
+            <section id="idea" class="tab-content">
+                <header class="gallery-header">
+                    <div class="header-titles">
+                        <h2><span>Idea Board</span></h2>
+                        <h3>Cloudinary 클라우드에서 가져온 영감의 조각들 📸</h3>
+                    </div>
+                </header>
+
+                <div class="masonry-grid" id="idea-grid">
+                    <!-- Images will be injected here -->
+                </div>
+            </section>
+
             <!-- Settings Section -->
             <section id="settings" class="tab-content">
                 <header class="gallery-header">
@@ -394,7 +424,7 @@
             <footer>
                 <div class="footer-content">
                     <div class="footer-info">
-                        <span class="creator">제작자 : 김수빈</span>
+                        <span class="creator">Made by Celldentity</span>
                         <div class="footer-socials">
                             <a href="https://www.instagram.com/celldentity/" target="_blank">
                                 <ion-icon name="logo-instagram"></ion-icon> 인스타
@@ -405,9 +435,9 @@
                         </div>
                     </div>
                     <p class="footer-disclaimer">
-                        홈페이지 내 뉴스를 제외한 모든 콘텐츠는 AI로 제작된 이미지와 본문입니다. 사실과 다른 부분이 있을 수 있습니다.
+                        홈페이지 내 뉴스를 제외한 모든 콘텐츠는 AI로 제작된 이미지와 본문입니다.<br>사실과 다른 부분이 있을 수 있으니 참고용으로만 활용해주세요.
                     </p>
-                    <p class="footer-copyright">&copy; 2026 MBC Arcademy AIX Gallery. All rights reserved.</p>
+                    <p class="footer-copyright">&copy; 2026 Celldentity Gallery. All rights reserved.</p>
                 </div>
             </footer>
         </main>

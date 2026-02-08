@@ -1331,6 +1331,38 @@ main {
     opacity: 0.5;
 }
 
+/* Masonry Grid [v75] */
+.masonry-grid {
+    column-count: 4;
+    column-gap: 1.5rem;
+    padding: 2rem 0;
+}
+
+.masonry-grid .gallery-item {
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    width: 100%;
+}
+
+@media (max-width: 1200px) {
+    .masonry-grid {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 900px) {
+    .masonry-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 600px) {
+    .masonry-grid {
+        column-count: 1;
+    }
+}
+
 .wide-card .card-content {
     position: relative;
     z-index: 1;

@@ -54,22 +54,30 @@ app.get('/api/stock', async (req, res) => {
                 percent = -percent;
             }
         } else {
-            // --- US Stock (Yahoo Finance) ---
-            url = `https://finance.yahoo.com/quote/${code}`;
+            // --- US Stock (Naver World Finance) [v75 Fix] ---
+            url = `https://finance.naver.com/world/sise.naver?symbol=${code}`;
             const response = await fetch(url, {
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
             });
             const html = await response.text();
             const $ = cheerio.load(html);
 
-            // Yahoo selector: fin-streamer
-            priceStr = $(`fin-streamer[data-field="regularMarketPrice"][data-symbol="${code}"]`).text().replace(/,/g, '');
-            changeStr = $(`fin-streamer[data-field="regularMarketChange"][data-symbol="${code}"]`).text().replace(/,/g, '');
-            percentStr = $(`fin-streamer[data-field="regularMarketChangePercent"][data-symbol="${code}"]`).text().replace(/[%,()]/g, ''); // Remove %, (, )
-            name = $('h1').first().text(); // Usually contains company name
+            // Naver World CSS Selectors
+            priceStr = $('.no_today .blind').eq(0).text().replace(/,/g, '');
+            const noExday = $('.no_exday');
+            changeStr = noExday.find('.blind').eq(0).text().replace(/,/g, '');
+            percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
 
+            // Symbol mapping to name if possible, or just use symbol
+            name = $('.wrap_company h2 a').text() || code;
+
+            const isDown = noExday.find('.ico.down').length > 0;
             change = parseFloat(changeStr);
             percent = parseFloat(percentStr);
+            if (isDown) {
+                change = -change;
+                percent = -percent;
+            }
         }
 
         if (!priceStr || isNaN(parseFloat(priceStr))) throw new Error('Parsing failed');
@@ -296,6 +304,42 @@ app.get('/api/insights/papers', async (req, res) => {
 // Market data now provided by TradingView widget - endpoint removed
 
 
+
+/**
+ * 5. Idea Board (Cloudinary Integration) [v75]
+ */
+app.get('/api/idea/list', async (req, res) => {
+    // Note: User needs to provide CLOUDINARY_URL in .env
+    const CLOUD_URL = process.env.CLOUDINARY_URL;
+    const CLOUD_NAME = process.env.CLOUDINARY_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+    if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+        console.warn('[Cloudinary] Missing credentials. Returning mock data or empty list.');
+        return res.json({ items: [], message: 'Missing Cloudinary Credentials' });
+    }
+
+    try {
+        // Simple fetch using Cloudinary API
+        const auth = Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64');
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image?max_results=50`, {
+            headers: { 'Authorization': `Basic ${auth}` }
+        });
+        const data = await response.json();
+
+        const items = (data.resources || []).map(r => ({
+            name: r.public_id.split('/').pop(),
+            imageUrl: r.secure_url,
+            link: r.secure_url,
+            pubDate: r.created_at
+        }));
+
+        res.json({ items });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // Vercel Serverless Function export
 module.exports = app;

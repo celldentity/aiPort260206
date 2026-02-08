@@ -1,7 +1,7 @@
 // [v61] Aura Arcade Engine & UI Fixes
 document.addEventListener('DOMContentLoaded', () => {
     // AGGRESSIVE CACHE CLEARING - v61
-    const CURRENT_VERSION = 'v74';
+    const CURRENT_VERSION = 'v75';
     const storedVersion = localStorage.getItem('app_version');
 
     if (storedVersion !== CURRENT_VERSION) {
@@ -56,9 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let allRecipes = [];
     let allNews = [];
     let allCoding = [];
+    let allIdeas = []; // [v75] Idea Board Storage
 
     // 로딩 상태 관리
-    let loadingStatus = { cars: false, recipes: false, news: false, coding: false };
+    let loadingStatus = { cars: false, recipes: false, news: false, coding: false, idea: false };
     let cursors = { newsStart: 1 };
     let hasMoreNews = true;
     let isFetchingNews = false;
@@ -244,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'card-car', data: allCars },
             { id: 'card-recipe', data: allRecipes },
             { id: 'card-coding', data: allCoding },
-            { id: 'card-news', data: allNews }
+            { id: 'card-news', data: allNews },
+            { id: 'card-idea', data: allIdeas } // [v75] Add Idea card preview
         ];
 
         mapping.forEach(item => {
@@ -278,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchInput.placeholder = "데이터 로딩 중... ⏳";
             searchInput.disabled = true;
         } else {
-            if (!loadingStatus.cars && !loadingStatus.recipes && !loadingStatus.coding) {
+            if (!loadingStatus.cars && !loadingStatus.recipes && !loadingStatus.coding && !loadingStatus.idea) {
                 searchContainer?.classList.remove('loading');
                 searchInput.placeholder = "검색어 입력 후 Enter...";
                 searchInput.disabled = false;
@@ -319,6 +321,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingStatus[type] = false;
         setSearchLoading(false);
+    }
+
+    // [v75] Idea Board Loader
+    async function backgroundIdeaLoad() {
+        if (loadingStatus.idea) return;
+        loadingStatus.idea = true;
+        try {
+            const resp = await fetch('/api/idea/list');
+            if (!resp.ok) throw new Error(`Idea API Error: ${resp.status}`);
+            const data = await resp.json();
+            if (data && data.items) {
+                allIdeas = data.items;
+                refreshGrid(allIdeas, 'idea-grid', false);
+                updateWideDashboardPreviews();
+            }
+        } catch (e) {
+            console.error('[Aura] Failed to load Idea board:', e);
+        } finally {
+            loadingStatus.idea = false;
+        }
     }
 
     async function fetchNextNews() {
@@ -435,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'coding': 'coding',
             'recipe': 'recipe',
             'gallery': 'gallery',
+            'idea': 'idea', // [v75]
             'minigame': 'game-section',
             'settings': 'settings',
             'search-results': 'search-results'
@@ -459,12 +482,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        const gridId = tabId === 'gallery' ? 'gallery-grid' : tabId === 'recipe' ? 'recipe-grid' : tabId === 'news' ? 'news-grid' : tabId === 'coding' ? 'coding-grid' : null;
+        const gridId = tabId === 'gallery' ? 'gallery-grid' : tabId === 'recipe' ? 'recipe-grid' : tabId === 'news' ? 'news-grid' : tabId === 'coding' ? 'coding-grid' : tabId === 'idea' ? 'idea-grid' : null;
         if (gridId) {
             const grid = document.getElementById(gridId);
             if (grid && grid.children.length === 0) {
-                const data = tabId === 'gallery' ? allCars : tabId === 'recipe' ? allRecipes : tabId === 'news' ? allNews : allCoding;
-                if (data.length > 0) appendData(data, gridId, tabId === 'news');
+                if (tabId === 'idea') {
+                    backgroundIdeaLoad();
+                } else {
+                    const data = tabId === 'gallery' ? allCars : tabId === 'recipe' ? allRecipes : tabId === 'news' ? allNews : allCoding;
+                    if (data.length > 0) appendData(data, gridId, tabId === 'news');
+                }
             }
         }
     }
@@ -787,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-refresh stock data every 30 seconds
     function startStockRefresh() {
         if (stockRefreshInterval) clearInterval(stockRefreshInterval);
-        stockRefreshInterval = setInterval(loadAIInsights, 30000); // 30 seconds
+        stockRefreshInterval = setInterval(loadAIInsights, 1800000); // 30 minutes (v75)
     }
 
     // Start stock refresh automatically
