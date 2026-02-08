@@ -1766,44 +1766,149 @@ main {
     border: none;
 }
 
-/* Dashboard Grid Update for 4 items */
-.dashboard-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+/* --- Final Layout Fixes (v71) --- */
+
+/* 1. Layout Structure (Optimized Widths) */
+.home-layout.dual-sidebar {
+    display: grid;
+    /* Reduced sidebar widths to give Main more space */
+    grid-template-columns: 250px 1fr 280px;
+    gap: 1.5rem;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 0 1rem;
 }
 
-@media (max-width: 600px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr !important;
+/* 2. Dashboard Grid (Forced 4 Columns, Big Cards) */
+.dashboard-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.dashboard-grid .glass-card {
+    /* Force Aspect Ratio & Min Size */
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+    min-height: 160px !important;
+    /* Prevents squashing */
+    height: auto !important;
+
+    /* Content Alignment */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center;
+    padding: 1.2rem !important;
+}
+
+.dashboard-grid .glass-card ion-icon {
+    font-size: 2.8rem;
+    margin-bottom: 0.8rem;
+    color: var(--aura-1);
+}
+
+.dashboard-grid .glass-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.dashboard-grid .glass-card p {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* 3. Responsive Rules */
+/* At 1300px, Sidebar-Main-Sidebar is too tight. Stack them. */
+@media (max-width: 1366px) {
+    .home-layout.dual-sidebar {
+        grid-template-columns: 1fr;
+        /* Stack everything */
+        gap: 2rem;
     }
-}  
-/* Dual Sidebar Layout */  
-.home-layout.dual-sidebar { display: grid; grid-template-columns: 280px 1fr 300px; gap: 2rem; max-width: 1700px; margin: 0 auto; }  
-.home-sidebar.right-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }  
-@media (max-width: 1400px) { .home-layout.dual-sidebar { grid-template-columns: 260px 1fr; } .home-sidebar.right-sidebar { display: none; } } 
-@media (max-width: 1400px) { .home-layout.dual-sidebar { grid-template-columns: 1fr; } .home-sidebar.left-sidebar { display: none; } .home-sidebar.right-sidebar { display: flex; order: 3; width: 100%; } } 
-  
-/* Dashboard Grid 4-Column Fix */  
-.dashboard-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 1rem; }  
-.dashboard-grid .glass-card { aspect-ratio: 4 / 3 !important; min-height: auto !important; }  
-@media (max-width: 768px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr) !important; } } 
-  
-.user-profile-card { display: flex; align-items: center; justify-content: space-between; padding: 1rem; margin-bottom: 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }  
-.profile-header { display: flex; align-items: center; gap: 0.8rem; }  
-.profile-avatar ion-icon { font-size: 2.5rem; color: var(--aura-1); }  
-.profile-info-mini h4 { margin: 0; font-size: 0.95rem; color: #fff; }  
-.profile-info-mini p { margin: 0; font-size: 0.75rem; color: rgba(255,255,255,0.6); }  
-.mini-btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.3rem 0.6rem; font-size: 0.7rem; border-radius: 20px; cursor: pointer; transition: 0.2s; }  
-.mini-btn-logout:hover { background: rgba(255,0,0,0.2); border-color: red; }  
-.dashboard-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 1rem; }  
-.dashboard-grid .glass-card { width: 100% !important; height: auto !important; aspect-ratio: 4 / 3 !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; } 
-  
-/* Profile Card and Layout Fixes v70 */  
-.user-profile-card { display: flex; align-items: center; justify-content: space-between; padding: 1rem; margin-bottom: 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }  
-.profile-header { display: flex; align-items: center; gap: 0.8rem; }  
-.profile-avatar ion-icon { font-size: 2.5rem; color: var(--aura-1); }  
-.profile-info-mini h4 { margin: 0; font-size: 0.95rem; color: #fff; }  
-.profile-info-mini p { margin: 0; font-size: 0.75rem; color: rgba(255,255,255,0.6); }  
-.mini-btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.3rem 0.6rem; font-size: 0.7rem; border-radius: 20px; cursor: pointer; transition: 0.2s; }  
-.mini-btn-logout:hover { background: rgba(255,0,0,0.2); border-color: red; }  
-.dashboard-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 1rem; }  
-.dashboard-grid .glass-card { width: 100% !important; height: auto !important; aspect-ratio: 4 / 3 !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; } 
+
+    .home-sidebar.left-sidebar {
+        display: none;
+        /* Hide left sidebar on mid-size screens to focus on Main */
+    }
+
+    .home-sidebar.right-sidebar {
+        order: 3;
+        /* Move right sidebar to bottom */
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Ensure 4 columns persist on Tablet Landscape */
+    .dashboard-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* Mobile: Stack grid */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .home-sidebar.right-sidebar {
+        display: block;
+    }
+}
+
+/* Profile Card Styling */
+.user-profile-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-avatar ion-icon {
+    font-size: 3rem;
+    color: var(--aura-2);
+}
+
+.profile-info-mini h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.profile-info-mini p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.mini-btn-logout {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mini-btn-logout:hover {
+    background: rgba(255, 50, 50, 0.2);
+    border-color: #ff4444;
+}
