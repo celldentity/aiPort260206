@@ -631,9 +631,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const krStocks = [
             { symbol: '005930.KS', name: '삼성전자', region: 'KR', fallback: { price: 58000, change: -500, percent: -0.85 } },
             { symbol: '000660.KS', name: 'SK하이닉스', region: 'KR', fallback: { price: 185000, change: 2000, percent: 1.09 } },
+            { symbol: '373220.KS', name: 'LG에너지솔루션', region: 'KR', fallback: { price: 390000, change: 1000, percent: 0.26 } },
+            { symbol: '207940.KS', name: '삼성바이오로직스', region: 'KR', fallback: { price: 780000, change: -5000, percent: -0.64 } },
+            { symbol: '005380.KS', name: '현대차', region: 'KR', fallback: { price: 240000, change: 1000, percent: 0.42 } },
+            { symbol: '000270.KS', name: '기아', region: 'KR', fallback: { price: 120000, change: 500, percent: 0.42 } },
+            { symbol: '068270.KS', name: '셀트리온', region: 'KR', fallback: { price: 180000, change: -1000, percent: -0.55 } },
+            { symbol: '105560.KS', name: 'KB금융', region: 'KR', fallback: { price: 78000, change: 200, percent: 0.26 } },
             { symbol: '035420.KS', name: 'NAVER', region: 'KR', fallback: { price: 170000, change: -1500, percent: -0.87 } },
-            { symbol: '035720.KS', name: '카카오', region: 'KR', fallback: { price: 38000, change: 500, percent: 1.33 } },
-            { symbol: '005380.KS', name: '현대차', region: 'KR', fallback: { price: 240000, change: 1000, percent: 0.42 } }
+            { symbol: '035720.KS', name: '카카오', region: 'KR', fallback: { price: 38000, change: 500, percent: 1.33 } }
         ];
 
         // Load stock data with fallback

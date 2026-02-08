@@ -14,7 +14,7 @@
     <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <link rel="stylesheet" href="style.css?v=TetrisReboot">
+    <link rel="stylesheet" href="style.css?v=DualSidebar">
 </head>
 
 <body class="initial-state">
@@ -112,9 +112,9 @@
         <main id="content">
             <!-- Home Section -->
             <section id="home" class="tab-content active">
-                <div class="home-layout side-left">
+                <div class="home-layout dual-sidebar">
                     <!-- Left: Guestbook & Market Sidebar -->
-                    <aside class="home-sidebar">
+                    <aside class="home-sidebar left-sidebar">
                         <div class="guestbook-container glass-card">
                             <div class="guestbook-header">
                                 <ion-icon name="chatbubbles-outline"></ion-icon>
@@ -130,8 +130,6 @@
                             </div>
                         </div>
 
-
-
                         <div class="insights-market-card glass-card">
                             <div class="insights-header">
                                 <ion-icon name="trending-up-outline"></ion-icon>
@@ -143,7 +141,7 @@
                         </div>
                     </aside>
 
-                    <!-- Right: Hero & Dashboard -->
+                    <!-- Center: Hero & Dashboard -->
                     <div class="home-main">
                         <header class="hero">
                             <h2 class="reveal-text">MBC Arcademy<br><span class="gradient-text">AIX 2026 Gallery</span>
@@ -192,20 +190,21 @@
                                     <p>코더들을 위한 AI 컨텐츠</p>
                                 </div>
                             </div>
-
-                            <div class="ai-insights-col">
-                                <div class="insights-papers-card glass-card">
-                                    <div class="insights-header">
-                                        <ion-icon name="book-outline"></ion-icon>
-                                        <h4>최신 AI 논문</h4>
-                                    </div>
-                                    <div id="papers-list" class="papers-column">
-                                        <p class="loading-msg">논문을 검색하는 중... 🧬</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
+
+                    <!-- Right: AI Papers Sidebar (Moved Here) -->
+                    <aside class="home-sidebar right-sidebar">
+                        <div class="insights-papers-card glass-card">
+                            <div class="insights-header">
+                                <ion-icon name="book-outline"></ion-icon>
+                                <h4>최신 AI 논문</h4>
+                            </div>
+                            <div id="papers-list" class="papers-column">
+                                <p class="loading-msg">논문을 검색하는 중... 🧬</p>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
             </section>
 
@@ -398,9 +397,7 @@
         </div>
     </div>
 
-
-
-    <script src="main.js?v=TetrisReboot" defer></script>
+    <script src="main.js?v=DualSidebar" defer></script>
 </body>
 
 </html>
