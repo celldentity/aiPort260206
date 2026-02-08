@@ -1911,4 +1911,8 @@ main {
 .mini-btn-logout:hover {
     background: rgba(255, 50, 50, 0.2);
     border-color: #ff4444;
-}
+}  
+/* EMERGENCY v73 FORCE 1 COL */  
+.dashboard-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }  
+.dashboard-grid .glass-card { width: 100% !important; aspect-ratio: 21/9 !important; min-height: 250px !important; }  
+@media (max-width: 1400px) { .home-layout.dual-sidebar { grid-template-columns: 1fr !important; } } 
