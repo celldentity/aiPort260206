@@ -231,7 +231,44 @@ document.addEventListener('DOMContentLoaded', () => {
         else alert('잉? 아이디나 비밀번호가 틀린 것 같아요! 다시 확인해줄래요? 🧐');
     });
 
-    // --- Dashboard Preview System (v53) ---
+    // --- Dashboard Wide Cards Logic [v72] ---
+    document.querySelectorAll('.wide-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const target = card.getAttribute('data-target');
+            if (target) switchTab(target);
+        });
+    });
+
+    function updateWideDashboardPreviews() {
+        const mapping = [
+            { id: 'card-car', data: allCars },
+            { id: 'card-recipe', data: allRecipes },
+            { id: 'card-coding', data: allCoding },
+            { id: 'card-news', data: allNews }
+        ];
+
+        mapping.forEach(item => {
+            const card = document.getElementById(item.id);
+            if (!card) return;
+            const itemsWithImg = item.data.filter(i => i.imageUrl);
+
+            if (itemsWithImg.length > 0) {
+                const randomItem = itemsWithImg[Math.floor(Math.random() * itemsWithImg.length)];
+                const bg = card.querySelector('.card-bg');
+                if (bg) {
+                    // Preload image
+                    const img = new Image();
+                    img.src = randomItem.imageUrl;
+                    img.onload = () => {
+                        bg.style.backgroundImage = `url(${randomItem.imageUrl})`;
+                    };
+                }
+            }
+        });
+    }
+
+    // Call this whenever data is loaded
+
 
 
     // --- Search Status Control ---
@@ -269,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (activeTab === (type === 'cars' ? 'gallery' : type === 'recipes' ? 'recipe' : 'coding')) {
                         appendData(data.items, gridId, false);
                     }
-                    if (isFirstBatch) { isFirstBatch = false; }
+                    if (isFirstBatch) { isFirstBatch = false; updateWideDashboardPreviews(); }
                     hasMore = data.hasMore;
                     cursor = data.nextCursor;
                 } else {
@@ -297,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 appendData(data.items, 'news-grid', true);
                 cursors.newsStart = data.nextStart;
                 hasMoreNews = data.hasMore;
-
+                updateWideDashboardPreviews();
             } else {
                 hasMoreNews = false;
             }
@@ -348,6 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!query) return;
 
         // [v70 Fix] Ensure data is loaded
+        activeTab = 'search-results'; location.hash = 'search';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        searchSection.classList.add('active');
+
         if (allCars.length === 0 && allRecipes.length === 0 && allCoding.length === 0) {
             console.log('Search triggered with no data. forcing load...');
             setSearchLoading(true);
@@ -355,10 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { setSearchLoading(false); performLocalSearch(query); }, 2500); // Retry after 2.5s
             return;
         }
-        activeTab = 'search-results'; location.hash = 'search';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        searchSection.classList.add('active');
         searchInput.blur();
         queryDisplay.innerHTML = `<span>'${query}'</span>` + " 검색 결과";
 
