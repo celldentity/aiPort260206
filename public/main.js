@@ -535,7 +535,16 @@ document.addEventListener('DOMContentLoaded', () => {
         data.forEach(item => {
             const div = document.createElement('div'); div.className = item.imageUrl ? 'gallery-item' : 'gallery-item no-image';
             div.innerHTML = `<div class="card-glow"></div>${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}<div class="car-info"><h4>${item.name}</h4><p style="font-size:0.8rem; opacity:0.5;">${item.pubDate || ''}</p></div>`;
-            div.addEventListener('click', () => (isNews || item.link) ? window.open(item.link || '#', '_blank') : openModal(item));
+            div.addEventListener('click', () => {
+                if (id === 'idea-grid') {
+                    // [v81] Idea Board: Show popup modal without title
+                    openDetailModal(item, true);
+                } else if (isNews || item.link) {
+                    window.open(item.link || '#', '_blank');
+                } else {
+                    openDetailModal(item);
+                }
+            });
             g.appendChild(div);
         });
     }
@@ -624,58 +633,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('detail-modal');
     const modalBody = document.querySelector('.modal-body');
 
-    function openModal(d) {
-        const modalImg = document.getElementById('modal-img');
-        const modalTitle = document.getElementById('modal-title');
-        const modalSummary = document.getElementById('modal-summary');
+    function openDetailModal(item, hideTitle = false) {
+        const detailModal = document.getElementById('detail-modal');
+        const modalImgContainer = detailModal.querySelector('.modal-image-container');
+        const modalImg = detailModal.querySelector('#modal-img');
+        const modalTitle = detailModal.querySelector('#modal-title');
+        const modalSummary = detailModal.querySelector('#modal-summary');
+        const modalTextContainer = detailModal.querySelector('.modal-text-container');
+        const modalContent = detailModal.querySelector('.modal-content');
 
-        if (d.youtubeId) {
+        if (!detailModal) return;
+
+        // Clear previous content
+        modalBody.innerHTML = '';
+
+        if (item.youtubeId) {
             // YouTube Embed 모드
             modalBody.innerHTML = `
                 <div class="video-container">
-                    <iframe src="https://www.youtube.com/embed/${d.youtubeId}?autoplay=1" 
-                            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    <iframe src="https://www.youtube.com/embed/${item.youtubeId}?autoplay=1"
+                            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen></iframe>
                 </div>
                 <div class="modal-text-container">
-                    <h2>${d.name}</h2>
-                    <p>${d.summary}</p>
+                    <h2 id="modal-title">${item.name}</h2>
+                    <p id="modal-summary">${item.summary}</p>
                 </div>
             `;
         } else {
-            // 일반 이미지 모드 (원상복구 대비 초기 구조 유지)
+            // 일반 이미지 모드
             modalBody.innerHTML = `
                 <div class="modal-image-container">
-                    <img id="modal-img" src="${d.imageUrl}" alt="${d.name}">
+                    <img id="modal-img" src="${item.imageUrl}" alt="${item.name}">
                 </div>
                 <div class="modal-text-container">
-                    <h2 id="modal-title">${d.name}</h2>
-                    <p id="modal-summary">${d.summary}</p>
+                    <h2 id="modal-title">${item.name}</h2>
+                    <p id="modal-summary">${item.summary}</p>
                 </div>
             `;
         }
 
-        modal.classList.add('active');
-        body.style.overflow = 'hidden';
+        // [v81] Hide title if requested (for Idea Board)
+        if (hideTitle) {
+            modalContent.classList.add('hide-title');
+        } else {
+            modalContent.classList.remove('hide-title');
+        }
+
+        detailModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
 
         setTimeout(() => {
             if (modalBody) modalBody.scrollTop = 0;
-            if (modal) modal.scrollTop = 0;
+            if (detailModal) detailModal.scrollTop = 0;
         }, 10);
     }
 
     // Modal Closing Logic (v60)
     function closeModal() {
-        modal.classList.remove('active');
-        body.style.overflow = 'auto';
-        // HTML inner content cleanup to stop videos
-        setTimeout(() => { modalBody.innerHTML = ''; }, 300);
+        const detailModal = document.getElementById('detail-modal');
+        if (detailModal) {
+            detailModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            // HTML inner content cleanup to stop videos
+            setTimeout(() => { modalBody.innerHTML = ''; }, 300);
+        }
     }
 
-    modal?.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-
+    const detailModal = document.getElementById('detail-modal');
+    if (detailModal) {
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) {
+                closeModal();
+            }
+        });
+    }
     document.getElementById('close-detail-modal')?.addEventListener('click', closeModal);
 
     // Escape key to close modal
