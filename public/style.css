@@ -446,9 +446,14 @@ body.logged-in #app-container {
     transform: translateY(0);
 }
 
+body.logged-in .glass-nav {
+    display: flex !important;
+}
+
 .glass-nav {
+    display: none;
+    /* Hide by default */
     position: fixed !important;
-    /* Force sticky even if other styles try to change it */
     top: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
@@ -1773,9 +1778,10 @@ footer {
     /* 세로 4:3 비율 */
 }
 
-#idea-grid .gallery-info {
+#idea-grid .gallery-info,
+#idea-grid .car-info {
     display: none !important;
-    /* Hide title on Idea Board Grid */
+    /* Hide info on hover/grid for Idea Board */
 }
 
 /* Hide title in Modal specifically for Idea Board */
@@ -2140,6 +2146,18 @@ footer {
     width: 100%;
     height: 100%;
     border: none;
+}
+
+.aura-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    /* Ensure background is always behind everything */
+    overflow: hidden;
+    pointer-events: none;
 }
 
 /* --- Final Layout Fixes (v71) --- */

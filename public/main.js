@@ -534,8 +534,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const g = document.getElementById(id); if (!g || !data) return;
         data.forEach(item => {
             const div = document.createElement('div'); div.className = item.imageUrl ? 'gallery-item' : 'gallery-item no-image';
-            div.innerHTML = `<div class="card-glow"></div>${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}<div class="car-info"><h4>${item.name}</h4><p style="font-size:0.8rem; opacity:0.5;">${item.pubDate || ''}</p></div>`;
+            const itemName = (item.name && item.name !== 'undefined') ? item.name : '';
+            const itemDate = (item.pubDate && item.pubDate !== 'undefined') ? item.pubDate : '';
+            div.innerHTML = `<div class="card-glow"></div>${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}<div class="car-info"><h4>${itemName}</h4><p style="font-size:0.8rem; opacity:0.5;">${itemDate}</p></div>`;
             div.addEventListener('click', () => {
+                // 모달 데이터 정제 로직을 추가합니다.
+                const titleText = (item.name && item.name !== 'undefined') ? item.name : '';
+                const summaryText = (item.summary && item.summary !== 'undefined') ? item.summary : (item.desc && item.desc !== 'undefined' ? item.desc : '');
+
+                // These lines are likely intended for openDetailModal, not here.
+                // modalImg.src = item.imageUrl || item.link || '';
+                // modalTitle.textContent = titleText;
+                // modalSummary.textContent = summaryText;
+
                 if (id === 'idea-grid') {
                     // [v81] Idea Board: Show popup modal without title
                     openDetailModal(item, true);
