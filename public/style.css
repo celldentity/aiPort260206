@@ -1945,3 +1945,6 @@ main {
 /* EMERGENCY v78 FIX OVERFLOW */  
 @media (min-width: 1200px) { .dashboard-grid .glass-card { min-width: 0 !important; } }  
 .dashboard-grid .glass-card { min-width: 0 !important; } 
+  
+/* EMERGENCY v79 FIX CARD HEIGHT */  
+.dashboard-grid .glass-card { min-height: 300px !important; height: auto !important; aspect-ratio: 21/9 !important; } 
