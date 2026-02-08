@@ -419,7 +419,8 @@ body.logged-in #app-container {
 }
 
 .glass-nav {
-    position: fixed;
+    position: fixed !important;
+    /* Force sticky even if other styles try to change it */
     top: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
@@ -427,7 +428,8 @@ body.logged-in #app-container {
     max-width: 1600px;
     height: auto;
     min-height: 4.5rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 15, 15, 0.8) !important;
+    /* Slightly darker for better contrast when scrolling */
     backdrop-filter: blur(25px);
     border: 1px solid var(--glass-border);
     border-radius: 2.25rem;
@@ -435,8 +437,8 @@ body.logged-in #app-container {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 1.5rem;
-    z-index: 1000;
-    /* Ensure it stays on top */
+    z-index: 9999;
+    /* Higher priority to stay on top of all modal and content */
 }
 
 .nav-logo {

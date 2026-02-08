@@ -212,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             backgroundFullLoad('cars');
             backgroundFullLoad('recipes');
             backgroundFullLoad('coding');
+            backgroundIdeaLoad(); // [v81] Parallel load Cloudinary Idea board
             fetchNextNews();
 
             initIntersectionObserver();
