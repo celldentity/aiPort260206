@@ -1,13 +1,13 @@
 ﻿:root {
-    --bg-color: #fdfbf7;
-    /* Clean, non-yellowish warm cream */
+    --bg-color: #fafafa;
+    /* Whiter background, less yellow */
     --text-primary: #121212;
     /* Deep black/grey for high contrast */
     --text-secondary: #555555;
     /* Softer grey for secondary text */
-    --glass-bg: #ffffff;
-    /* Solid white for cards in bright mode */
-    --glass-border: rgba(0, 0, 0, 0.05);
+    --glass-bg: #fffbf2;
+    /* Warmer cream for cards/menu */
+    --glass-border: rgba(0, 0, 0, 0.04);
     /* Very subtle border */
     --aura-1: #000000;
     /* Primary accent is now black for that 'Site of the Day' look */
@@ -15,7 +15,7 @@
     --aura-2: #f0ede1;
     /* Adjusted for clean background */
     --aura-3: #e8e6d5;
-    --aura-cursor-color: rgba(0, 0, 0, 0.05);
+    --aura-cursor-color: rgba(0, 0, 0, 0.03);
     --ai-grid-color: rgba(0, 0, 0, 0.02);
     --ai-node-color: rgba(0, 0, 0, 0.08);
     --font-main: 'Inter', sans-serif;
@@ -669,8 +669,8 @@ body {
     max-width: 1600px;
     height: auto;
     min-height: 3.5rem;
-    background: #ffffff !important;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
     border-radius: 1rem;
     display: flex;
@@ -726,7 +726,7 @@ body {
     top: 100%;
     left: 50%;
     transform: translateX(-50%) translateY(10px);
-    background: #ffffff;
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: 1.2rem;
@@ -1314,8 +1314,8 @@ main {
     padding: 2rem !important;
     display: flex;
     flex-direction: column;
-    background: rgba(255, 253, 230, 0.4) !important;
-    /* [v144] Warmer cream tint for sidebars */
+    background: #fffbf2 !important;
+    /* [v144] Warmer tone for insights widgets */
     border-color: rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -1493,8 +1493,8 @@ main {
     min-height: 500px !important;
     display: flex;
     flex-direction: column;
-    background: rgba(255, 253, 230, 0.4) !important;
-    /* [v144] Warmer cream tint for sidebars */
+    background: #fffbf2 !important;
+    /* [v144] Warmer tone for guestbook */
     border-color: rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -1935,7 +1935,8 @@ footer {
     margin-top: 6rem;
     padding: 4rem 2rem;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
-    background: #ffffff;
+    background: #fff9f0;
+    /* Warmer footer background */
     border-radius: 2.5rem 2.5rem 0 0;
 }
 

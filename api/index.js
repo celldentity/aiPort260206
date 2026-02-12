@@ -128,15 +128,22 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// --- API Credentials (환경 변수) ---
-const NOTION_TOKEN = process.env.NOTION_TOKEN;
-const CAR_DB_ID = process.env.CAR_DB_ID;
-const RECIPE_DB_ID = process.env.RECIPE_DB_ID;
-const CODING_DB_ID = process.env.CODING_DB_ID;
-const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID;
-const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID;
-const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
-const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
+// --- API Credentials (환경 변수 + 비밀 파일 하이브리드) ---
+let secrets = {};
+try {
+    secrets = require('./secrets');
+} catch (e) {
+    console.warn('[Secrets] api/secrets.js not found, using environment variables only.');
+}
+
+const NOTION_TOKEN = process.env.NOTION_TOKEN || secrets.NOTION_TOKEN;
+const CAR_DB_ID = process.env.CAR_DB_ID || secrets.CAR_DB_ID;
+const RECIPE_DB_ID = process.env.RECIPE_DB_ID || secrets.RECIPE_DB_ID;
+const CODING_DB_ID = process.env.CODING_DB_ID || secrets.CODING_DB_ID;
+const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || secrets.GUESTBOOK_DB_ID;
+const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID || secrets.URL_COLLECTION_DB_ID;
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || secrets.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || secrets.NAVER_CLIENT_SECRET;
 
 const EMAIL_USER = process.env.EMAIL_USER || 'YOUR_GMAIL@gmail.com';
 const EMAIL_PASS = process.env.EMAIL_PASS || 'YOUR_APP_PASSWORD';
@@ -450,7 +457,43 @@ app.get('/api/insights/papers', async (req, res) => {
 });
 
 
-// Market data now provided by TradingView widget - endpoint removed
+// [v144] Unified Stock Scraper (Naver for KR, Yahoo for US)
+app.get('/api/stock', async (req, res) => {
+    const { code } = req.query;
+    if (!code) return res.status(400).json({ error: 'Code required' });
+
+    try {
+        let price = 0, change = 0, percent = 0;
+
+        if (code.match(/^\d+$/)) { // KR Stock (Naver Finance)
+            const url = `https://finance.naver.com/item/main.naver?code=${code}`;
+            const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });
+            const html = await resp.text();
+
+            const pMatch = html.match(/<em class="no_up">([\d,]+)/) || html.match(/<em class="no_down">([\d,]+)/) || html.match(/<em class="no_none">([\d,]+)/);
+            const cMatch = html.match(/<span class="ico (?:up|down)">([\d,]+)/);
+            const rMatch = html.match(/<span class="tah p11 (?:red02|nv01)">([+-][\d.]+)/);
+
+            if (pMatch) price = parseInt(pMatch[1].replace(/,/g, ''));
+            if (cMatch) change = parseInt(cMatch[1].replace(/,/g, ''));
+            if (rMatch) percent = parseFloat(rMatch[1]);
+        } else { // US Stock (Yahoo Finance Proxy)
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${code}`;
+            const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });
+            const data = await resp.json();
+            const meta = data.chart?.result?.[0]?.meta;
+            if (meta) {
+                price = meta.regularMarketPrice;
+                change = price - meta.previousClose;
+                percent = (change / meta.previousClose) * 100;
+            }
+        }
+        res.json({ price, change, percent });
+    } catch (e) {
+        console.error(`[Stock Error] ${code}:`, e.message);
+        res.status(500).json({ error: 'Failed to fetch stock data' });
+    }
+});
 
 
 

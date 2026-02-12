@@ -9,3 +9,4 @@ node_modules
 /build
 package-lock.json
 public/firebase-config.js
+api/secrets.js
