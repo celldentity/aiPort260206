@@ -1,0 +1,21 @@
+{
+  "name": "ai-port-local",
+  "version": "1.0.0",
+  "description": "MBC Academy AIX 2026 Gallery Project",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "vercel-build": "echo 'V97.3_BUILD_TRIGGERED' && exit 0"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.9.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
