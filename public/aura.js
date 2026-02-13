@@ -156,19 +156,18 @@ document.addEventListener('DOMContentLoaded', () => {
             this.x = Math.random() * w;
             this.y = Math.random() * h;
             // Faster movement for a more active feel
-            this.vx = (Math.random() - 0.5) * 0.25;
-            this.vy = (Math.random() - 0.5) * 0.25;
-            // Larger, softer blobs
-            this.radius = Math.random() * 150 + 100;
-            // Warm, minimal color palette (creams, subtle ambers, soft greys)
+            this.vx = (Math.random() - 0.5) * 0.4;
+            this.vy = (Math.random() - 0.5) * 0.4;
+            // Particles are nodes in the network
+            this.radius = Math.random() * 2 + 1;
+            // Galactic colors
             const colors = [
-                'rgba(232, 230, 213, 0.4)', // Warm cream
-                'rgba(215, 210, 180, 0.3)', // Soft sand
-                'rgba(245, 245, 240, 0.5)', // Off-white
-                'rgba(220, 215, 190, 0.25)' // Muted amber
+                'rgba(165, 180, 252, 0.8)', // Light Indigo
+                'rgba(196, 181, 253, 0.7)', // Light Purple
+                'rgba(255, 255, 255, 0.5)', // White stardust
+                'rgba(129, 140, 248, 0.6)'  // Blueish
             ];
             this.color = colors[Math.floor(Math.random() * colors.length)];
-            this.blur = Math.random() * 40 + 20; // Internal randomization for blur effect
         }
         update() {
             if (!canvas) return;
@@ -177,32 +176,43 @@ document.addEventListener('DOMContentLoaded', () => {
             this.x += this.vx;
             this.y += this.vy;
 
-            // Gentle wrapping or bouncing? Bouncing feels more 'contained' for objects
-            if (this.x < -this.radius) this.x = w + this.radius;
-            if (this.x > w + this.radius) this.x = -this.radius;
-            if (this.y < -this.radius) this.y = h + this.radius;
-            if (this.y > h + this.radius) this.y = -this.radius;
+            if (this.x < 0) this.x = w;
+            if (this.x > w) this.x = 0;
+            if (this.y < 0) this.y = h;
+            if (this.y > h) this.y = 0;
         }
         draw() {
             if (!ctx) return;
-            ctx.save();
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-
-            // Applying soft edge look via shadowing inside canvas can be expensive, 
-            // but for a small number of objects it's okay. 
-            // Alternatively, we use the CSS blur on the canvas itself, but per-object is better.
-            ctx.shadowBlur = this.blur;
-            ctx.shadowColor = this.color;
             ctx.fillStyle = this.color;
             ctx.fill();
-            ctx.restore();
+        }
+    }
+
+    function drawLines() {
+        if (!ctx) return;
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 150) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(165, 180, 252, ${0.15 * (1 - dist / 150)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
         }
     }
 
     function createParticles() {
         particles = [];
-        const count = window.innerWidth < 800 ? 5 : 8; // Fewer objects for a cleaner look
+        const count = window.innerWidth < 800 ? 40 : 100; // More particles for the network
         for (let i = 0; i < count; i++) particles.push(new Particle());
     }
 
@@ -212,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width / dpr;
         const h = canvas.height / dpr;
 
-        // 매 프레임 변환 행렬 리셋 후 dpr 적용 (가장 안전한 방법)
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w + 10, h + 10);
 
@@ -220,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             p.update();
             p.draw();
         });
+        drawLines();
         requestAnimationFrame(animate);
     }
 
