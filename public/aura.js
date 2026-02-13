@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allNews = [];
     let allCoding = [];
     let allIdeas = []; // [v75] Idea Board Storage
+    let allUrls = [];  // [v145] URL Collection Storage
 
     // 로딩 상태 관리
     let loadingStatus = { cars: false, recipes: false, coding: false, idea: false };

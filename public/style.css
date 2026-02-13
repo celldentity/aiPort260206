@@ -143,6 +143,18 @@ body {
     animation: drift 30s infinite alternate;
 }
 
+/* [v145] Header Sharp Contrast for Dark mode */
+.gallery-header h2 span {
+    position: relative;
+    z-index: 1;
+    padding: 0.2rem 1rem;
+    background: #fffcf0;
+    /* Warm cream background */
+    color: #000000;
+    /* Sharp black text */
+    border-radius: 0.5rem;
+}
+
 .aura-cursor {
     position: absolute;
     width: 400px;
@@ -1930,10 +1942,12 @@ main {
 /* Footer Styling [v76] */
 footer {
     margin-top: 4rem;
-    padding: 2rem 2rem;
+    padding: 1.5rem 2rem;
+    /* Reduced padding for compact look */
     border: 1px solid var(--glass-border);
     background: var(--glass-bg);
     border-radius: 2.5rem !important;
+    /* All corners rounded */
     /* All corners rounded */
     margin-bottom: 2rem;
     max-width: 1000px;
