@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "MBC Academy AIX 2026 Gallery Project",
   "main": "api/index.js",
+  "type": "module",
   "scripts": {
     "start": "node api/index.js",
     "vercel-build": "echo 'V97.3_BUILD_TRIGGERED' && exit 0"

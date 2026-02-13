@@ -1,8 +1,14 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-// Removed Cheerio as it might be missing or causing issues
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+// Fetch is native in Node 18+
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -44,14 +50,16 @@ app.get('/api/stock', async (req, res) => {
             url = `https://finance.naver.com/item/main.naver?code=${code}`;
             const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
             const html = await response.text();
-            const $ = cheerio.load(html);
+            // [v145.3] Regex-based parsing (Native Fetch)
+            const pMatch = html.match(/<em class="no_up">[^]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_down">[^]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_none">[^]*?<span class="blind">([\d,]+)/);
 
-            // Detailed selectors for Naver Finance
-            priceStr = $('.no_today .blind').first().text().replace(/,/g, '');
-            const noExday = $('.no_exday');
-            changeStr = noExday.find('.blind').first().text().replace(/,/g, '');
-            percentStr = noExday.find('.blind').eq(1).text().replace(/%/g, '');
-            name = $('.wrap_company h2 a').text().trim();
+            const pFallback = html.match(/class="now_value">([\d,]+)/) || html.match(/class="price">([\d,]+)/);
+            priceStr = pMatch ? pMatch[1] : (pFallback ? pFallback[1] : '0');
+
+            const nMatch = html.match(/<div class="wrap_company">[^]*?<h2><a[^>]*>([^<]+)/);
+            name = nMatch ? nMatch[1].trim() : code;
 
             const isDown = noExday.find('.ico.down').length > 0;
             change = parseFloat(changeStr) || 0;
@@ -78,20 +86,15 @@ app.get('/api/stock', async (req, res) => {
                 }
             } catch (e) { console.error(`[Yahoo] Failed for ${code}:`, e.message); }
 
-            // Fallback to Naver Search IF Yahoo fails
-            if (!priceStr || isNaN(parseFloat(priceStr))) {
+            // [v145.3] Regex fallback for Naver Search
+            if (!priceStr || priceStr === '0') {
                 const sUrl = `https://search.naver.com/search.naver?query=미국주식+${code}`;
                 const sResp = await fetch(sUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
                 const sHtml = await sResp.text();
-                const $s = cheerio.load(sHtml);
-                priceStr = $s('.sise_price .stock_price').text().replace(/,/g, '') || $s('.price_area .now_price').text().replace(/,/g, '');
-                changeStr = $s('.sise_price .price_val').first().text().replace(/,/g, '') || $s('.price_area .change_price').text().replace(/,/g, '');
-                percentStr = $s('.sise_price .per_val').first().text().replace(/[+%\-]/g, '') || $s('.price_area .change_percent').text().replace(/[+%\-]/g, '');
-                name = $s('.sise_tit strong').text() || $s('.stock_name').text() || code;
-                const isDown = $s('.sise_price .price_val').parent().hasClass('down') || $s('.price_area .ico.down').length > 0;
-                change = parseFloat(changeStr) || 0;
-                percent = parseFloat(percentStr) || 0;
-                if (isDown) { change = -Math.abs(change); percent = -Math.abs(percent); }
+
+                const spMatch = sHtml.match(/class="now_price">([\d,.]+)/) || sHtml.match(/class="stock_price">([\d,.]+)/);
+                priceStr = spMatch ? spMatch[1].replace(/,/g, '') : '0';
+                name = code;
             }
         }
 
@@ -972,11 +975,12 @@ app.get('/api/proxy-image', async (req, res) => {
     }
 });
 
-// Vercel Serverless Function export
-module.exports = app;
+// [v145.3] Export for ESM
+export default app;
 
 // 로컬 실행용 (node api/index.js)
-if (require.main === module) {
+import { fileURLToPath as fup } from 'url';
+if (process.argv[1] === fup(import.meta.url)) {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
 }
