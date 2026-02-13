@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
 const path = require('path');
-const cheerio = require('cheerio'); // [NEW] For scraping
+// Removed Cheerio as it might be missing or causing issues
 require('dotenv').config();
 
 const app = express();
@@ -128,22 +127,15 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// --- API Credentials (환경 변수 + 비밀 파일 하이브리드) ---
-let secrets = {};
-try {
-    secrets = require('./secrets');
-} catch (e) {
-    console.warn('[Secrets] api/secrets.js not found, using environment variables only.');
-}
-
-const NOTION_TOKEN = process.env.NOTION_TOKEN || secrets.NOTION_TOKEN;
-const CAR_DB_ID = process.env.CAR_DB_ID || secrets.CAR_DB_ID;
-const RECIPE_DB_ID = process.env.RECIPE_DB_ID || secrets.RECIPE_DB_ID;
-const CODING_DB_ID = process.env.CODING_DB_ID || secrets.CODING_DB_ID;
-const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || secrets.GUESTBOOK_DB_ID;
-const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID || secrets.URL_COLLECTION_DB_ID;
-const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || secrets.NAVER_CLIENT_ID;
-const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || secrets.NAVER_CLIENT_SECRET;
+// --- API Credentials ---
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
+const CAR_DB_ID = process.env.CAR_DB_ID || 'c7e86753244d80a18770cdf8cb99589d';
+const RECIPE_DB_ID = process.env.RECIPE_DB_ID || '80ca6753244d806385d9cca956f77918';
+const CODING_DB_ID = process.env.CODING_DB_ID || '2e8a6753244d80b3b40fd541753022a2';
+const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || '301a6753244d8045b498d56f10eae762';
+const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID || '2eea6753244d80bfafb6c56005a83812';
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
 const EMAIL_USER = process.env.EMAIL_USER || 'YOUR_GMAIL@gmail.com';
 const EMAIL_PASS = process.env.EMAIL_PASS || 'YOUR_APP_PASSWORD';
@@ -199,7 +191,7 @@ async function fetchThumbnail(url) {
 }
 
 app.get('/api/news', async (req, res) => {
-    const query = req.query.query || '인공지능 뉴스';
+    const query = req.query.query || '인공지능 뉴스'; // Restore original query
     const start = parseInt(req.query.start) || 1;
     try {
         const response = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=20&start=${start}&sort=sim`, {
@@ -470,7 +462,11 @@ app.get('/api/stock', async (req, res) => {
             const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });
             const html = await resp.text();
 
-            const pMatch = html.match(/<em class="no_up">([\d,]+)/) || html.match(/<em class="no_down">([\d,]+)/) || html.match(/<em class="no_none">([\d,]+)/);
+            // More robust regex for Naver Finance
+            const pMatch = html.match(/<em class="no_up">[\s\S]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_down">[\s\S]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_none">[\s\S]*?<span class="blind">([\d,]+)/);
+
             const cMatch = html.match(/<span class="ico (?:up|down)">([\d,]+)/);
             const rMatch = html.match(/<span class="tah p11 (?:red02|nv01)">([+-][\d.]+)/);
 

@@ -1,4 +1,8 @@
-﻿// [v144] Hybrid Firebase Initialization (Local + Secure Server)
+﻿// [v144] Firebase SDK Imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+// Hybrid Firebase Initialization (Local + Secure Server)
 let auth;
 async function initFirebase() {
     try {

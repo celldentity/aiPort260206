@@ -1,21 +1,16 @@
 ﻿:root {
-    --bg-color: #fafafa;
-    /* Whiter background, less yellow */
+    --bg-color: #ffffff;
+    /* Clean white background as requested */
     --text-primary: #121212;
-    /* Deep black/grey for high contrast */
     --text-secondary: #555555;
-    /* Softer grey for secondary text */
-    --glass-bg: #fffbf2;
-    /* Warmer cream for cards/menu */
-    --glass-border: rgba(0, 0, 0, 0.04);
-    /* Very subtle border */
+    --glass-bg: #fffcf0;
+    /* Consistent warm cream for all components */
+    --glass-border: rgba(0, 0, 0, 0.05);
     --aura-1: #000000;
-    /* Primary accent is now black for that 'Site of the Day' look */
     --aura-1-light: #333333;
-    --aura-2: #f0ede1;
-    /* Adjusted for clean background */
-    --aura-3: #e8e6d5;
-    --aura-cursor-color: rgba(0, 0, 0, 0.03);
+    --aura-2: #f4f1e6;
+    --aura-3: #eee9d1;
+    --aura-cursor-color: rgba(0, 0, 0, 0.04);
     --ai-grid-color: rgba(0, 0, 0, 0.02);
     --ai-node-color: rgba(0, 0, 0, 0.08);
     --font-main: 'Inter', sans-serif;
@@ -671,8 +666,9 @@ body {
     min-height: 3.5rem;
     background: var(--glass-bg) !important;
     border: 1px solid var(--glass-border);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    /* Softer shadow */
+    border-radius: 1.2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1932,12 +1928,20 @@ main {
 
 /* Footer Styling [v76] */
 footer {
-    margin-top: 6rem;
-    padding: 4rem 2rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    background: #fff9f0;
-    /* Warmer footer background */
-    border-radius: 2.5rem 2.5rem 0 0;
+    margin-top: 4rem;
+    padding: 2rem 2rem;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    border-radius: 2.5rem !important;
+    /* All corners rounded */
+    margin-bottom: 2rem;
+    max-width: 1000px;
+    /* Reduced width for cleaner look */
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .footer-content {
