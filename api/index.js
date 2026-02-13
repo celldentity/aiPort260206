@@ -190,8 +190,38 @@ async function fetchThumbnail(url) {
     } catch (e) { return null; }
 }
 
+// [v145] URL Collection System (Notion)
+app.get('/api/urls', async (req, res) => {
+    try {
+        const response = await fetch(`https://api.notion.com/v1/databases/${URL_COLLECTION_DB_ID}/query`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${NOTION_TOKEN}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sorts: [{ property: '이름', direction: 'descending' }]
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) return res.status(response.status).json({ error: 'DB Fetch Failed', detail: data });
+
+        const items = data.results.map(page => {
+            const props = page.properties;
+            return {
+                name: props['이름']?.title[0]?.plain_text || 'Untitled',
+                link: props['URL']?.url || props['링크']?.url || '#',
+                summary: props['비고']?.rich_text[0]?.plain_text || '',
+                pubDate: new Date(page.created_time).toLocaleDateString()
+            };
+        });
+        res.json({ items });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/news', async (req, res) => {
-    const query = req.query.query || '인공지능 뉴스'; // Restore original query
+    const query = req.query.query || '인공지능 뉴스';
     const start = parseInt(req.query.start) || 1;
     try {
         const response = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=20&start=${start}&sort=sim`, {
@@ -208,7 +238,7 @@ app.get('/api/news', async (req, res) => {
                 pubDate: item.pubDate
             };
         }));
-        res.json({ items: processedItems, hasMore: data.total > start + 20, nextStart: start + 20 });
+        res.json({ items: processedItems, hasMore: (data.total || 0) > start + 20, nextStart: start + 20 });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -463,14 +493,18 @@ app.get('/api/stock', async (req, res) => {
             const html = await resp.text();
 
             // More robust regex for Naver Finance
-            const pMatch = html.match(/<em class="no_up">[\s\S]*?<span class="blind">([\d,]+)/) ||
-                html.match(/<em class="no_down">[\s\S]*?<span class="blind">([\d,]+)/) ||
-                html.match(/<em class="no_none">[\s\S]*?<span class="blind">([\d,]+)/);
+            const pMatch = html.match(/<em class="no_up">[^]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_down">[^]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_none">[^]*?<span class="blind">([\d,]+)/);
+
+            // Fallback for different HTML structure
+            const pFallback = html.match(/class="now_value">([\d,]+)/) || html.match(/class="price">([\d,]+)/);
+            const finalPrice = pMatch ? pMatch[1] : (pFallback ? pFallback[1] : null);
 
             const cMatch = html.match(/<span class="ico (?:up|down)">([\d,]+)/);
             const rMatch = html.match(/<span class="tah p11 (?:red02|nv01)">([+-][\d.]+)/);
 
-            if (pMatch) price = parseInt(pMatch[1].replace(/,/g, ''));
+            if (finalPrice) price = parseInt(finalPrice.replace(/,/g, ''));
             if (cMatch) change = parseInt(cMatch[1].replace(/,/g, ''));
             if (rMatch) percent = parseFloat(rMatch[1]);
         } else { // US Stock (Yahoo Finance Proxy)

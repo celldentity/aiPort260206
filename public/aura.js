@@ -154,9 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const h = canvas?.height / dpr || window.innerHeight;
             this.x = Math.random() * w;
             this.y = Math.random() * h;
-            // Extremely slow movement for a peaceful feel
-            this.vx = (Math.random() - 0.5) * 0.05;
-            this.vy = (Math.random() - 0.5) * 0.05;
+            // Faster movement for a more active feel
+            this.vx = (Math.random() - 0.5) * 0.25;
+            this.vy = (Math.random() - 0.5) * 0.25;
             // Larger, softer blobs
             this.radius = Math.random() * 150 + 100;
             // Warm, minimal color palette (creams, subtle ambers, soft greys)
@@ -1078,10 +1078,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendData(data, id, isNews) {
         const g = document.getElementById(id); if (!g || !data) return;
         data.forEach(item => {
-            const div = document.createElement('div'); div.className = item.imageUrl ? 'gallery-item' : 'gallery-item no-image';
+            const div = document.createElement('div');
+            div.className = item.imageUrl ? 'gallery-item' : 'gallery-item no-image';
             const itemName = (item.name && item.name !== 'undefined') ? item.name : '';
             const itemDate = (item.pubDate && item.pubDate !== 'undefined') ? item.pubDate : '';
-            div.innerHTML = `<div class="card-glow"></div>${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}<div class="car-info"><h4>${itemName}</h4><p style="font-size:0.8rem; opacity:0.5;">${itemDate}</p></div>`;
+
+            // [v145] Custom styling for items without images (News, etc.)
+            let contentStyle = '';
+            if (!item.imageUrl && isNews) {
+                contentStyle = `style="background: transparent; border: 1px solid var(--glass-border); color: #fffcf0;"`;
+            }
+
+            div.innerHTML = `
+                <div class="card-glow"></div>
+                ${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}
+                <div class="car-info" ${contentStyle}>
+                    <h4>${itemName}</h4>
+                    <p style="font-size:0.8rem; opacity:0.5;">${itemDate}</p>
+                </div>`;
             div.addEventListener('click', () => {
                 if (id === 'idea-grid') {
                     // [v81] Idea Board: Show popup modal without title
@@ -1402,10 +1416,10 @@ document.addEventListener('DOMContentLoaded', () => {
         boardTab.addEventListener('click', loadBoardPosts);
     }
 
-    // Auto-refresh stock data every 30 seconds
+    // Auto-refresh stock data every 5 minutes
     function startStockRefresh() {
         if (stockRefreshInterval) clearInterval(stockRefreshInterval);
-        stockRefreshInterval = setInterval(loadAIInsights, 1800000); // 30 minutes (v75)
+        stockRefreshInterval = setInterval(loadAIInsights, 300000); // 5 minutes (v145)
     }
 
     // Start stock refresh automatically

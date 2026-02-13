@@ -1,18 +1,18 @@
 ﻿:root {
-    --bg-color: #ffffff;
-    /* Clean white background as requested */
-    --text-primary: #121212;
-    --text-secondary: #555555;
-    --glass-bg: #fffcf0;
-    /* Consistent warm cream for all components */
-    --glass-border: rgba(0, 0, 0, 0.05);
-    --aura-1: #000000;
-    --aura-1-light: #333333;
-    --aura-2: #f4f1e6;
-    --aura-3: #eee9d1;
-    --aura-cursor-color: rgba(0, 0, 0, 0.04);
-    --ai-grid-color: rgba(0, 0, 0, 0.02);
-    --ai-node-color: rgba(0, 0, 0, 0.08);
+    --bg-color: #050505;
+    /* Deep Aura Black */
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    /* Subtle glass for dark mode */
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --aura-1: #ffffff;
+    --aura-1-light: rgba(255, 255, 255, 0.2);
+    --aura-2: #1a1a1a;
+    --aura-3: #121212;
+    --aura-cursor-color: rgba(255, 255, 255, 0.05);
+    --ai-grid-color: rgba(255, 255, 255, 0.02);
+    --ai-node-color: rgba(255, 255, 255, 0.1);
     --font-main: 'Inter', sans-serif;
     --font-heading: 'Outfit', sans-serif;
 }
