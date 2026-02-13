@@ -470,13 +470,19 @@ app.get('/api/insights/papers', async (req, res) => {
 
         while ((match = entryRegex.exec(xml)) !== null) {
             const content = match[1];
-            const title = (content.match(/<title>([\s\S]*?)<\/title>/) || [])[1]?.trim().replace(/\s+/g, ' ');
-            const summary = (content.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1]?.trim().replace(/\s+/g, ' ');
-            const link = (content.match(/<link[^>]+href=["']([^"']+)["']/) || [])[1];
-            const published = (content.match(/<published>([\s\S]*?)<\/published>/) || [])[1];
+            // [v145.5] Enhanced Regex for ArXiv (Avoid XML parsing)
+            const titleMatch = content.match(/<title>([\s\S]*?)<\/title>/);
+            const summaryMatch = content.match(/<summary>([\s\S]*?)<\/summary>/);
+            const linkMatch = content.match(/<link[^>]+href=["']([^"']+)["']/);
+            const dateMatch = content.match(/<published>([\s\S]*?)<\/published>/);
 
-            if (title && link) {
-                rawEntries.push({ title, summary: summary ? summary.substring(0, 200) + '...' : '', link, published });
+            if (titleMatch && linkMatch) {
+                rawEntries.push({
+                    title: titleMatch[1].trim().replace(/\s+/g, ' '),
+                    summary: summaryMatch ? summaryMatch[1].trim().substring(0, 200).replace(/\s+/g, ' ') + '...' : '',
+                    link: linkMatch[1],
+                    published: dateMatch ? dateMatch[1] : new Date().toISOString()
+                });
             }
         }
 
