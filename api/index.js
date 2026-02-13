@@ -3,12 +3,20 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import nodemailer from 'nodemailer'; // [v145.4] Fixed missing import
 // Fetch is native in Node 18+
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// [v145.4] Safe Secrets Import for ESM
+let secrets = {};
+try {
+    const secretsModule = await import('./secrets.js').catch(() => ({ default: {} }));
+    secrets = secretsModule.default || {};
+} catch (e) { console.warn('[Secrets] Using env only'); }
 
 const app = express();
 
@@ -61,9 +69,15 @@ app.get('/api/stock', async (req, res) => {
             const nMatch = html.match(/<div class="wrap_company">[^]*?<h2><a[^>]*>([^<]+)/);
             name = nMatch ? nMatch[1].trim() : code;
 
-            const isDown = noExday.find('.ico.down').length > 0;
-            change = parseFloat(changeStr) || 0;
-            percent = parseFloat(percentStr) || 0;
+            // [v145.4] Fixed undefined variables (noExday, changeStr, percentStr)
+            const cMatch = html.match(/<span class="ico (?:up|down)">([\d,]+)/);
+            const rMatch = html.match(/<span class="tah p11 (?:red02|nv01)">([+-][\d.]+)/);
+
+            if (finalPrice) price = parseInt(finalPrice.replace(/,/g, ''));
+            if (cMatch) change = parseInt(cMatch[1].replace(/,/g, ''));
+            if (rMatch) percent = parseFloat(rMatch[1]);
+
+            const isDown = html.match(/<span class="ico down">/) !== null;
             if (isDown) {
                 change = -Math.abs(change);
                 percent = -Math.abs(percent);
@@ -125,20 +139,15 @@ app.get('/api/stock', async (req, res) => {
  * 3. Market \u0026 Coding List (Mock Data)
  */
 // ... (rest of the file)
-// Explicitly handle root for local dev
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
-
-// --- API Credentials ---
-const NOTION_TOKEN = process.env.NOTION_TOKEN;
-const CAR_DB_ID = process.env.CAR_DB_ID || 'c7e86753244d80a18770cdf8cb99589d';
-const RECIPE_DB_ID = process.env.RECIPE_DB_ID || '80ca6753244d806385d9cca956f77918';
-const CODING_DB_ID = process.env.CODING_DB_ID || '2e8a6753244d80b3b40fd541753022a2';
-const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || '301a6753244d8045b498d56f10eae762';
-const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID || '2eea6753244d80bfafb6c56005a83812';
-const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
-const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
+// --- API Credentials (Hybrid) ---
+const NOTION_TOKEN = process.env.NOTION_TOKEN || secrets.NOTION_TOKEN;
+const CAR_DB_ID = process.env.CAR_DB_ID || secrets.CAR_DB_ID || 'c7e86753244d80a18770cdf8cb99589d';
+const RECIPE_DB_ID = process.env.RECIPE_DB_ID || secrets.RECIPE_DB_ID || '80ca6753244d806385d9cca956f77918';
+const CODING_DB_ID = process.env.CODING_DB_ID || secrets.CODING_DB_ID || '2e8a6753244d80b3b40fd541753022a2';
+const GUESTBOOK_DB_ID = process.env.GUESTBOOK_DB_ID || secrets.GUESTBOOK_DB_ID || '301a6753244d8045b498d56f10eae762';
+const URL_COLLECTION_DB_ID = process.env.URL_COLLECTION_DB_ID || secrets.URL_COLLECTION_DB_ID || '2eea6753244d80bfafb6c56005a83812';
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || secrets.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || secrets.NAVER_CLIENT_SECRET;
 
 const EMAIL_USER = process.env.EMAIL_USER || 'YOUR_GMAIL@gmail.com';
 const EMAIL_PASS = process.env.EMAIL_PASS || 'YOUR_APP_PASSWORD';
