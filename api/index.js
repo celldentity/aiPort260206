@@ -510,21 +510,29 @@ app.get('/api/stock', async (req, res) => {
             const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });
             const html = await resp.text();
 
-            // More robust regex for Naver Finance
-            const pMatch = html.match(/<em class="no_up">[^]*?<span class="blind">([\d,]+)/) ||
-                html.match(/<em class="no_down">[^]*?<span class="blind">([\d,]+)/) ||
-                html.match(/<em class="no_none">[^]*?<span class="blind">([\d,]+)/);
+            // [v145.6] Extra Robust Regex for Naver Finance (Restored)
+            const pMatch = html.match(/<em class="no_today"[^>]*>[\s\S]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<em class="no_up">[\s\S]*?<span class="blind">([\d,]+)/);
 
-            // Fallback for different HTML structure
-            const pFallback = html.match(/class="now_value">([\d,]+)/) || html.match(/class="price">([\d,]+)/);
-            const finalPrice = pMatch ? pMatch[1] : (pFallback ? pFallback[1] : null);
+            const cMatch = html.match(/<em class="no_exday"[^>]*>[\s\S]*?<span class="blind">([\d,]+)/) ||
+                html.match(/<span class="ico (?:up|down)">([\d,]+)/);
 
-            const cMatch = html.match(/<span class="ico (?:up|down)">([\d,]+)/);
-            const rMatch = html.match(/<span class="tah p11 (?:red02|nv01)">([+-][\d.]+)/);
+            const rMatch = html.match(/<em class="no_exday"[^>]*>[\s\S]*?<span class="tah[^>]*>([+-][\d.]+)/) ||
+                html.match(/<span class="tah p11 (?:red02|nv01)">([+-][\d.]+)/);
 
-            if (finalPrice) price = parseInt(finalPrice.replace(/,/g, ''));
-            if (cMatch) change = parseInt(cMatch[1].replace(/,/g, ''));
-            if (rMatch) percent = parseFloat(rMatch[1]);
+            const finalPrice = pMatch ? pMatch[1].replace(/,/g, '') : null;
+            const finalChange = cMatch ? cMatch[1].replace(/,/g, '') : '0';
+            const finalPercent = rMatch ? rMatch[1] : '0';
+
+            if (finalPrice) price = parseInt(finalPrice);
+            change = parseInt(finalChange);
+            percent = parseFloat(finalPercent);
+
+            const isDown = html.match(/<span class="ico down">/) !== null || html.match(/no_down/) !== null;
+            if (isDown) {
+                change = -Math.abs(change);
+                percent = -Math.abs(percent);
+            }
         } else { // US Stock (Yahoo Finance Proxy)
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${code}`;
             const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) });

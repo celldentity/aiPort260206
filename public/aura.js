@@ -1,34 +1,21 @@
-﻿// [v144] Firebase SDK Imports
+// [v128] Firebase Integration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Hybrid Firebase Initialization (Local + Secure Server)
-let auth;
-async function initFirebase() {
-    try {
-        let config = window.firebaseConfig;
+// 🔴 [중요] 파이어베이스 콘솔에서 설정값을 복사해서 아래에 붙여넣으세요!
+const firebaseConfig = {
+    apiKey: "AIzaSyCaXrLeoGs1nbGtwnc1a5RrzB2PNgyAWp0",
+    authDomain: "aiport260206.firebaseapp.com",
+    projectId: "aiport260206",
+    storageBucket: "aiport260206.firebasestorage.app",
+    messagingSenderId: "314711204809",
+    appId: "1:314711204809:web:a7e15fe6645ea1db347e18",
+    measurementId: "G-5B0WVSZ190"
+};
 
-        // If local config is empty or missing keys, fetch from server
-        if (!config || !config.apiKey) {
-            console.log('Local config missing, fetching from server...');
-            const resp = await fetch('/api/config/firebase');
-            config = await resp.json();
-        }
-
-        if (config && config.apiKey) {
-            const app = initializeApp(config);
-            auth = getAuth(app);
-            console.log('Firebase initialized (Hybrid mode) 🔒');
-            setupAuthListener();
-        } else {
-            console.warn('Firebase config still missing after hybrid check ⚠️');
-        }
-    } catch (e) {
-        console.error('Firebase init failed:', e);
-    }
-}
-
-initFirebase();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 document.addEventListener('DOMContentLoaded', () => {
     // [v84] Custom Toast Notification
@@ -60,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // AGGRESSIVE CACHE CLEARING - v61 (v117 Modified: Preserve User Data)
     // [v130] Google Auth Only
-    const CURRENT_VERSION = 'v144';
+    const CURRENT_VERSION = 'v130';
     const storedVersion = localStorage.getItem('app_version');
 
     if (storedVersion !== CURRENT_VERSION) {
@@ -82,8 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Auth & Elements
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
+    const loginContainer = document.getElementById('login-form-container');
+    const signupContainer = document.getElementById('signup-form-container');
 
     // Guestbook Elements
     const gbList = document.getElementById('guestbook-list');
@@ -107,8 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
     let currentUser = null;
     let activeTab = 'home';
-    let pendingTab = null; // [v97] Board 로그인 후 이동할 탭
-    let appInitialized = false; // [v97] 데이터 초기 로딩 여부
 
     // 로컬 데이터 저장소 (검색 및 미리보기용)
     let allCars = [];
@@ -116,10 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let allNews = [];
     let allCoding = [];
     let allIdeas = []; // [v75] Idea Board Storage
-    let allUrls = [];  // [v145] URL Collection Storage
 
     // 로딩 상태 관리
-    let loadingStatus = { cars: false, recipes: false, coding: false, idea: false };
+    let loadingStatus = { cars: false, recipes: false, news: false, coding: false, idea: false };
     let cursors = { newsStart: 1 };
     let hasMoreNews = true;
     let isFetchingNews = false;
@@ -155,64 +143,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const h = canvas?.height / dpr || window.innerHeight;
             this.x = Math.random() * w;
             this.y = Math.random() * h;
-            // Faster movement for a more active feel
-            this.vx = (Math.random() - 0.5) * 0.4;
-            this.vy = (Math.random() - 0.5) * 0.4;
-            // Particles are nodes in the network
-            this.radius = Math.random() * 2 + 1;
-            // Galactic colors
-            const colors = [
-                'rgba(165, 180, 252, 0.8)', // Light Indigo
-                'rgba(196, 181, 253, 0.7)', // Light Purple
-                'rgba(255, 255, 255, 0.5)', // White stardust
-                'rgba(129, 140, 248, 0.6)'  // Blueish
-            ];
-            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.vx = (Math.random() - 0.5) * 0.15;
+            this.vy = (Math.random() - 0.5) * 0.15;
+            this.radius = Math.random() * 2 + 1.5;
         }
         update() {
             if (!canvas) return;
             const w = canvas.width / dpr;
             const h = canvas.height / dpr;
-            this.x += this.vx;
-            this.y += this.vy;
-
-            if (this.x < 0) this.x = w;
-            if (this.x > w) this.x = 0;
-            if (this.y < 0) this.y = h;
-            if (this.y > h) this.y = 0;
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
         }
         draw() {
             if (!ctx) return;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fill();
-        }
-    }
-
-    function drawLines() {
-        if (!ctx) return;
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < 150) {
-                    ctx.beginPath();
-                    ctx.strokeStyle = `rgba(165, 180, 252, ${0.15 * (1 - dist / 150)})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.stroke();
-                }
-            }
         }
     }
 
     function createParticles() {
         particles = [];
-        const count = window.innerWidth < 800 ? 40 : 100; // More particles for the network
+        const count = window.innerWidth < 800 ? 15 : 25; // [v100] Lighter effect (Reduced from 40/60)
         for (let i = 0; i < count; i++) particles.push(new Particle());
     }
 
@@ -222,14 +176,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width / dpr;
         const h = canvas.height / dpr;
 
+        // 매 프레임 변환 행렬 리셋 후 dpr 적용 (가장 안전한 방법)
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w + 10, h + 10);
 
-        particles.forEach((p) => {
+        particles.forEach((p, index) => {
             p.update();
             p.draw();
+            for (let j = index + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                const dx = p.x - p2.x;
+                const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 * (1 - dist / 150)})`;
+                    ctx.lineWidth = 0.8;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
         });
-        drawLines();
         requestAnimationFrame(animate);
     }
 
@@ -265,62 +233,19 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', initCanvas);
     }
 
-    // --- Firebase Authentication [v97: Public Site - Board Login Only] ---
-
-    // [v97] 로그인 모달 표시 헬퍼
-    function showLoginModal() {
-        loginScreen.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // [v144] 스크롤 차단
-    }
-    function hideLoginModal() {
-        loginScreen.style.display = 'none';
-        document.body.style.overflow = ''; // [v144] 스크롤 복구
-    }
-
-    // [v97] 비로그인 시 네비 사용자 정보 토글
-    function updateNavAuthUI() {
-        const navUserInfo = document.getElementById('nav-user-info');
-        const navLogoutBtn = document.getElementById('nav-logout-btn');
-        if (currentUser) {
-            if (navUserInfo) navUserInfo.style.display = '';
-            if (navLogoutBtn) navLogoutBtn.style.display = '';
-        } else {
-            if (navUserInfo) navUserInfo.style.display = 'none';
-            if (navLogoutBtn) navLogoutBtn.style.display = 'none';
-        }
-    }
-
-    // [v97] 앱 초기 데이터 로딩 (로그인 여부 무관하게 1회 실행)
-    function initAppData() {
-        if (appInitialized) return;
-        appInitialized = true;
-
-        setSearchLoading(true);
-        loadAIInsights();
-
-        setTimeout(() => backgroundFullLoad('cars'), 500);
-        setTimeout(() => backgroundFullLoad('recipes'), 1500);
-        setTimeout(() => backgroundFullLoad('coding'), 2500);
-        setTimeout(() => backgroundIdeaLoad(), 3500);
-        setTimeout(() => fetchNextNews(), 4500);
-
-        initIntersectionObserver();
-
-        const targetTab = location.hash.replace('#', '') || sessionStorage.getItem('aura_active_tab') || 'home';
-        switchTab(targetTab === 'search' ? 'home' : targetTab, false);
-    }
+    // --- Firebase Authentication [v130: Google Only] ---
 
     // [Firebase] 구글 로그인 (유일한 로그인 수단)
     const googleLoginBtn = document.getElementById('google-login-btn');
     googleLoginBtn?.addEventListener('click', async () => {
         const provider = new GoogleAuthProvider();
+        // [v131] Force account selection popup
         provider.setCustomParameters({ prompt: 'select_account' });
 
         try {
             const result = await signInWithPopup(auth, provider);
-            showToast('로그인 성공! 이제 게시판을 이용할 수 있어요 ✨');
+            showToast('반가워요! 당신만을 위한 특별한 갤러리에 오신 걸 환영합니다! ✨');
             console.log('Google Login Success:', result.user.email);
-            hideLoginModal();
         } catch (error) {
             console.error("Google Login Error:", error);
             if (error.code === 'auth/popup-blocked') {
@@ -333,23 +258,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // [v97] 로그인 모달 배경 클릭 시 닫기
-    loginScreen?.addEventListener('click', (e) => {
-        if (e.target === loginScreen) {
-            hideLoginModal();
-        }
-    });
 
 
-    // [Firebase] 로그아웃 [v97: 공개 사이트에서 홈으로 이동]
+    // [Firebase] 로그아웃
     const handleLogout = () => {
-        auraConfirm('로그아웃 하시겠습니까? 😊', async () => {
+        auraConfirm('잠시 쉬려 하시나요? 즐거운 시간이었길 바랄게요. 또 만나요! 😊', async () => {
             try {
                 await signOut(auth);
                 sessionStorage.removeItem('aura_session');
                 localStorage.removeItem('aura_users');
-                switchTab('home');
-                showToast('로그아웃 되었습니다. 또 만나요! 👋');
+                location.reload();
             } catch (error) {
                 console.error("Logout Error:", error);
             }
@@ -358,51 +276,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('nav-logout-btn')?.addEventListener('click', handleLogout);
 
-    // [Firebase] 상태 변화 감지 & 세션 유지 [v97: Public Site]
-    function setupAuthListener() {
-        if (!auth) return;
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // 로그인 성공 -> UI 업데이트
-                console.log('Firebase Session Active:', user.email);
-                const auraUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    username: user.email,
-                    name: user.displayName || user.email.split('@')[0],
-                    provider: 'firebase'
-                };
+    // [Firebase] 상태 변화 감지 & 세션 유지
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // 로그인 성공 -> UI 업데이트
+            console.log('Firebase Session Active:', user.email);
+            const auraUser = {
+                uid: user.uid,
+                email: user.email,
+                username: user.email,
+                name: user.displayName || user.email.split('@')[0],
+                provider: 'firebase'
+            };
 
-                currentUser = auraUser;
-                sessionStorage.setItem('aura_session', JSON.stringify(auraUser));
-                hideLoginModal();
+            currentUser = auraUser;
+            sessionStorage.setItem('aura_session', JSON.stringify(auraUser));
 
-                // [v133] Update Header User Info
-                const navUserName = document.getElementById('nav-user-name');
-                const navUserEmail = document.getElementById('nav-user-email');
-                if (navUserName) navUserName.innerText = currentUser.name;
-                if (navUserEmail) navUserEmail.innerText = currentUser.email;
+            loginScreen.style.display = 'none';
+            appContainer.style.display = 'block';
+            body.classList.replace('initial-state', 'logged-in');
 
-                updateNavAuthUI();
-                loadGuestbook();
+            // [v133] Update Header User Info
+            const navUserName = document.getElementById('nav-user-name');
+            const navUserEmail = document.getElementById('nav-user-email');
+            if (navUserName) navUserName.innerText = currentUser.name;
+            if (navUserEmail) navUserEmail.innerText = currentUser.email;
 
-                // [v97] 로그인 후 pending 탭이 있으면 이동
-                if (pendingTab) {
-                    const tab = pendingTab;
-                    pendingTab = null;
-                    switchTab(tab);
-                }
-            } else {
-                console.log('No Active Session - Public mode');
-                currentUser = null;
-                sessionStorage.removeItem('aura_session');
-                updateNavAuthUI();
-            }
+            loadGuestbook();
+            setSearchLoading(true);
+            loadAIInsights();
 
-            // [v97] 로그인 여부와 무관하게 앱 데이터 초기 로딩
-            initAppData();
-        });
-    }
+            setTimeout(() => backgroundFullLoad('cars'), 500);
+            setTimeout(() => backgroundFullLoad('recipes'), 1500);
+            setTimeout(() => backgroundFullLoad('coding'), 2500);
+            setTimeout(() => backgroundIdeaLoad(), 3500);
+            setTimeout(() => fetchNextNews(), 4500);
+
+            initIntersectionObserver();
+
+            const targetTab = location.hash.replace('#', '') || sessionStorage.getItem('aura_active_tab') || 'home';
+            switchTab(targetTab === 'search' ? 'home' : targetTab, false);
+        } else {
+            console.log('No Active Session');
+            // [v131] 로그아웃 상태 확실히 처리
+            currentUser = null;
+            sessionStorage.removeItem('aura_session');
+            loginScreen.style.display = 'flex';
+            appContainer.style.display = 'none';
+            body.classList.replace('logged-in', 'initial-state');
+        }
+    });
 
     // Deprecated: Old Login Logic Removed
     /*
@@ -479,13 +402,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await resp.json();
 
                 if (data && data.items && Array.isArray(data.items)) {
-                    const info = getDataByType(type);
-                    if (!info) break;
+                    const targetArray = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : allCoding;
+                    const gridId = type === 'cars' ? 'gallery-grid' : type === 'recipes' ? 'recipe-grid' : 'coding-grid';
 
-                    info.array.push(...data.items);
+                    targetArray.push(...data.items);
 
                     if (activeTab === (type === 'cars' ? 'gallery' : type === 'recipes' ? 'recipe' : 'coding')) {
-                        refreshGrid(info.array, info.grid, false);
+                        refreshGrid(targetArray, gridId, false);
                     }
                     if (isFirstBatch) { isFirstBatch = false; updateWideDashboardPreviews(); }
                     hasMore = data.hasMore;
@@ -558,20 +481,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sentinel) obs.observe(sentinel);
     }
 
-    const getDataByType = (type) => {
-        const mapping = {
-            cars: { array: allCars, grid: 'gallery-grid' },
-            recipes: { array: allRecipes, grid: 'recipe-grid' },
-            coding: { array: allCoding, grid: 'coding-grid' },
-            idea: { array: allIdeas, grid: 'idea-grid' }
-        };
-        const key = type === 'gallery' ? 'cars' : type === 'recipe' ? 'recipes' : type;
-        return mapping[key];
-    };
-
-    const filterByQuery = (array, query) => array.filter(item => item.name.toLowerCase().includes(query));
-
-    // --- Search Event Listeners ---
+    // --- Local Search System ---
+    // 모바일 전용 검색 아이콘(동그라미) 클릭 시 처리
     searchContainer?.addEventListener('click', (e) => {
         if (window.innerWidth <= 800) {
             searchModal.classList.add('active');
@@ -581,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchInput?.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
-            e.preventDefault();
+            e.preventDefault(); // 기본 동작 방지 (혹시 모를 폼 전송 등)
             performLocalSearch(searchInput.value.trim().toLowerCase());
         }
     });
@@ -597,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function performLocalSearch(query) {
         if (!query) return;
 
+        // [v74 Fix] Use switchTab for consistency
         switchTab('search-results', false);
         location.hash = 'search';
         searchInput.blur();
@@ -605,16 +517,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Search triggered with no data. forcing load...');
             setSearchLoading(true);
             backgroundFullLoad('cars'); backgroundFullLoad('recipes'); backgroundFullLoad('coding');
-            setTimeout(() => { setSearchLoading(false); performLocalSearch(query); }, 2500);
+            setTimeout(() => { setSearchLoading(false); performLocalSearch(query); }, 2500); // Retry after 2.5s
             return;
         }
-
+        searchInput.blur();
         queryDisplay.innerHTML = `<span>'${query}'</span>` + " 검색 결과";
 
-        const filteredCars = filterByQuery(allCars, query);
-        const filteredRecipes = filterByQuery(allRecipes, query);
-        const filteredNews = filterByQuery(allNews, query);
-        const filteredCoding = filterByQuery(allCoding, query);
+        const filteredCars = allCars.filter(i => i.name.toLowerCase().includes(query));
+        const filteredRecipes = allRecipes.filter(i => i.name.toLowerCase().includes(query));
+        const filteredNews = allNews.filter(i => i.name.toLowerCase().includes(query));
+        const filteredCoding = allCoding.filter(i => i.name.toLowerCase().includes(query));
 
         renderSearchSubGrid('search-grid-cars', 'search-section-cars', filteredCars, false);
         renderSearchSubGrid('search-grid-recipes', 'search-section-recipes', filteredRecipes, false);
@@ -645,22 +557,15 @@ document.addEventListener('DOMContentLoaded', () => {
         else { section.style.display = 'block'; appendData(items, gridId, isNews); }
     }
 
-    // --- Navigation [v97: Public with Board Login Gate] ---
+    // --- Navigation ---
     function switchTab(tabId, updateHash = true) {
-        // [v97] Board 탭은 로그인 필요
-        if (tabId === 'board' && !currentUser) {
-            auraConfirm('게시판을 이용하려면 로그인이 필요합니다. 로그인하시겠습니까? 🔐', () => {
-                pendingTab = 'board';
-                showLoginModal();
-            });
-            return;
-        }
+        if (!currentUser) return;
 
         activeTab = tabId;
         sessionStorage.setItem('aura_active_tab', tabId);
         if (updateHash) location.hash = tabId;
 
-        // [v83] Explicit Visibility Control
+        // [v83] Explicit Visibility Control (Restore style.display to override any stuck inline styles)
         const sections = document.querySelectorAll('.tab-content');
         sections.forEach(sec => {
             sec.style.display = 'none';
@@ -688,11 +593,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (tabId === 'board') {
                 loadBoardPosts();
             } else if (tabId === 'coding' || tabId === 'gallery' || tabId === 'recipe') {
-                const info = getDataByType(tabId);
-                if (info) {
-                    if (info.array.length === 0) backgroundFullLoad(tabId === 'gallery' ? 'cars' : tabId === 'recipe' ? 'recipes' : 'coding');
-                    else refreshGrid(info.array, info.grid, false);
-                }
+                const type = tabId === 'gallery' ? 'cars' : tabId === 'recipe' ? 'recipes' : 'coding';
+                const gridId = type === 'cars' ? 'gallery-grid' : type === 'recipes' ? 'recipe-grid' : 'coding-grid';
+                const dataArray = type === 'cars' ? allCars : type === 'recipes' ? allRecipes : allCoding;
+
+                if (dataArray.length === 0) backgroundFullLoad(type);
+                else refreshGrid(dataArray, gridId, false);
             } else if (tabId === 'idea') {
                 if (allIdeas.length === 0) backgroundIdeaLoad();
                 else refreshGrid(allIdeas, 'idea-grid', false);
@@ -736,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('hashchange', () => {
         const tab = location.hash.replace('#', '');
-        if (tab && tab !== 'search') switchTab(tab, false);
+        if (tab && tab !== 'search' && currentUser) switchTab(tab, false);
     });
     // [v83] Event Delegation for Navigation (More robust)
     document.addEventListener('click', e => {
@@ -768,12 +674,24 @@ document.addEventListener('DOMContentLoaded', () => {
         d.querySelectorAll('.dropdown-item').forEach(i => i.addEventListener('click', () => {
             const sortType = i.getAttribute('data-sort');
             textSpan.innerText = i.innerText;
-            const info = getDataByType(typeKey);
-            if (info) {
-                info.array.sort((a, b) => sortType === 'desc' ? b.name.localeCompare(a.name, 'ko') : a.name.localeCompare(b.name, 'ko'));
-                refreshGrid(info.array, info.grid, false);
+            d.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active')); i.classList.add('active');
+
+            let target = [];
+            let targetGrid = '';
+
+            if (typeKey === 'cars') {
+                target = allCars;
+                targetGrid = 'gallery-grid';
+            } else if (typeKey === 'recipes') {
+                target = allRecipes;
+                targetGrid = 'recipe-grid';
+            } else if (typeKey === 'coding') {
+                target = allCoding;
+                targetGrid = 'coding-grid';
             }
-            d.classList.remove('open');
+
+            target.sort((a, b) => sortType === 'desc' ? b.name.localeCompare(a.name, 'ko') : a.name.localeCompare(b.name, 'ko'));
+            refreshGrid(target, targetGrid, false); d.classList.remove('open');
         }));
     }
     setupDropdown('sort-dropdown', 'current-sort', 'cars');
@@ -1089,24 +1007,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendData(data, id, isNews) {
         const g = document.getElementById(id); if (!g || !data) return;
         data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = item.imageUrl ? 'gallery-item' : 'gallery-item no-image';
+            const div = document.createElement('div'); div.className = item.imageUrl ? 'gallery-item' : 'gallery-item no-image';
             const itemName = (item.name && item.name !== 'undefined') ? item.name : '';
             const itemDate = (item.pubDate && item.pubDate !== 'undefined') ? item.pubDate : '';
-
-            // [v145] Custom styling for items without images (News, etc.)
-            let contentStyle = '';
-            if (!item.imageUrl && isNews) {
-                contentStyle = `style="background: transparent; border: 1px solid var(--glass-border); color: #fffcf0;"`;
-            }
-
-            div.innerHTML = `
-                <div class="card-glow"></div>
-                ${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}
-                <div class="car-info" ${contentStyle}>
-                    <h4>${itemName}</h4>
-                    <p style="font-size:0.8rem; opacity:0.5;">${itemDate}</p>
-                </div>`;
+            div.innerHTML = `<div class="card-glow"></div>${item.imageUrl ? `<img src="${item.imageUrl}" loading="lazy">` : ''}<div class="car-info"><h4>${itemName}</h4><p style="font-size:0.8rem; opacity:0.5;">${itemDate}</p></div>`;
             div.addEventListener('click', () => {
                 if (id === 'idea-grid') {
                     // [v81] Idea Board: Show popup modal without title
@@ -1427,10 +1331,10 @@ document.addEventListener('DOMContentLoaded', () => {
         boardTab.addEventListener('click', loadBoardPosts);
     }
 
-    // Auto-refresh stock data every 5 minutes
+    // Auto-refresh stock data every 30 seconds
     function startStockRefresh() {
         if (stockRefreshInterval) clearInterval(stockRefreshInterval);
-        stockRefreshInterval = setInterval(loadAIInsights, 300000); // 5 minutes (v145)
+        stockRefreshInterval = setInterval(loadAIInsights, 1800000); // 30 minutes (v75)
     }
 
     // Start stock refresh automatically
